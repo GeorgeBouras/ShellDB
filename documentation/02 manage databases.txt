@@ -32,17 +32,41 @@ create , Create a new database
 		}
 	}
 
-
-	examples
+	examples:
 	curl -XPOST -H"Content-Type: application/json" -d '{"db" : "DB1"}' localhost:7000/db/create
 	curl -XPOST -H"Content-Type: application/json" -d  @data.json      localhost:7000/db/create
 
+
+
+list , List one or more databases
+---------------------------------
+
+	POST db/list
+	You can use the * ? wildcards characters to narrow wide your search
+	It is case insensitive
+	Optional you can use the jq for post edit the results
+	
+	examples:
+	curl    http://localhost:7000/db/list
+	curl   'http://localhost:7000/db/list?canonical=true'
+	curl -s http://localhost:7000/db/list | jq '.database|.[]|{name,status}'
+
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"db*"}'  localhost:7000/db/list
+
+
+
+open , Open one or more database
+--------------------------------
 
 
 
 
 drop , Deletes one or more databases
 
-	curl -XPOST -H"Content-Type: application/json" --data '{"db" : "DB1"}'  localhost:7000/db/drop
+	curl -XPOST -H"Content-Type: application/json" --d '{"db":"DB1"}' localhost:7000/db/drop
+	curl -XPOST -H"Content-Type: application/json" --d '{"db":"D??"}' localhost:7000/db/drop
+	curl -XPOST -H"Content-Type: application/json" --d '{"db":"*"}'   localhost:7000/db/drop
+
+list, List one or more databases
 
 	curl -XPOST -H"Content-Type: application/json" --data '{"db" : "DB?"}'  localhost:7000/db/list
