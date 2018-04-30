@@ -3,10 +3,34 @@ Query operations are available at path /query
 POST db/query
 
 Query the database at any level using filters
+
+As usuall the query is a json document posted at the server e.g.
+curl -XPOST -H"Content-Type: application/json" -data @query.json 'localhost:7000/query?canonical=true'
+
+You can limit the levels of how deep the query will dig by using the key  max_level
+
 The filters are applied at search time so the I/O is reduced as much as possible
 You can apply filters at keys, at values or both at keys/values
 
 Filters are optional. Usually is better to hit a deep key directly than a shallow one using filters to narrow your search
 
-As usuall the query is a json document posted at the server e.g.
-curl -XPOST -H"Content-Type: application/json" -data @query.json 'localhost:7000/query?canonical=true'
+if you have multiple filters all must be TRUE, but inside every filter you can have OR between filter's conditions. You can have multiple blocks at every filter using parenthesis
+At every filter you must define the level that should be checked against
+
+At filter's condtitions you can use the usual operators and simple functionms common to all languages (substr, index, etc) and regular expressions
+
+	>    greater than     arithmetic
+	>=   greater or equal arithmetic
+	==   equal            arithmetic
+	<=   less    or equal arithmetic
+	<    less    than     arithmetic
+
+	gt   greater than     literal
+	ge   greater or equal literal
+	eq   equal            literal
+	le   less    or equal literal
+	lt   less    than     literal
+
+	or   logical OR
+	and  logical AND
+
