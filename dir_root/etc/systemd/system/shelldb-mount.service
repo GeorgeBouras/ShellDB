@@ -1,0 +1,20 @@
+[Unit]
+Description=ShellDB mount loopback devices
+Documentation=https://www.linux.org
+After=network.target
+Before=shelldb.service
+PartOf=shelldb.service
+
+[Service]
+Type=simple
+User=shelldb
+Group=shelldb
+ExecStart=/bin/sh -c "echo '{\"db\":\"*\"}' | /usr/bin/perl /opt/shelldb/cgi-db/open"
+ExecStop=/bin/sh  -c "echo '{\"db\":\"*\"}' | /usr/bin/perl /opt/shelldb/cgi-db/close"
+RemainAfterExit=yes
+KillMode=mixed
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,37 @@
+#!/bin/bash
+# Install/Uninstall utility for ShellDB
+#
+# George Bouras, george.mpouras@yandex.com
+# 23 Apr 2018
+# Greece, Athens
+
+declare -A opt
+opt[scriptdir]="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Import functions
+if [ -f ${opt[scriptdir]}/lib/install.lib ]; then
+	  . ${opt[scriptdir]}/lib/install.lib
+else
+	if [ -f ${opt[scriptdir]}/dir_install/lib/install.lib ]; then
+		  . ${opt[scriptdir]}/dir_install/lib/install.lib
+    else
+		echo Library file is missing : ${opt[scriptdir]}/dir_install/lib/install.lib
+		exit 160
+	fi
+fi
+
+# Read configuration
+SetOptions
+#for key in "${!opt[@]}"; do echo "$key -> ${opt[$key]}"; done; exit # our options 
+
+if [ -z $1 ];                             then Ambiguous   ; exit 161; fi
+if echo $1 | grep -iE "^-*v" > /dev/null; then Version     ; exit 0  ; fi
+if echo $1 | grep -iE "^-*a" > /dev/null; then About       ; exit 0  ; fi
+if echo $1 | grep -iE "^-*l" > /dev/null; then License     ; exit 0  ; fi
+if echo $1 | grep -iE "^-*h" > /dev/null; then Help        ; exit 0  ; fi
+if echo $1 | grep -iE "^-*i" > /dev/null; then Install     ; exit 0  ; fi
+if echo $1 | grep -iE "^-*r" > /dev/null; then Uninstall $@; exit 0  ; fi
+if echo $1 | grep -iE "^-*u" > /dev/null; then Uninstall $@; exit 0  ; fi
+
+SyntaxError $1
+exit 162

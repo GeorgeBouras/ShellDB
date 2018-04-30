@@ -1,0 +1,24 @@
+[Unit]
+Description=ShellDB
+Documentation=https://www.lighttpd.net
+After=network.target shelldb-mount.service
+BindsTo=shelldb-mount.service
+
+[Service]
+Type=simple
+User=shelldb
+Group=shelldb
+ExecStartPre=/opt/shelldb/bin/lighttpd -t -f /opt/shelldb/config/webserver.conf
+ExecStart=/opt/shelldb/bin/lighttpd    -D -f /opt/shelldb/config/webserver.conf -m /opt/shelldb/lib
+ExecReload=/bin/kill -HUP $MAINPID
+StandardOutput=journal
+StandardError=journal
+KillMode=mixed
+KillSignal=SIGTERM
+SendSIGKILL=yes
+LimitNOFILE=infinity
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

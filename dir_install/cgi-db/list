@@ -1,0 +1,223 @@
+#!/usr/bin/perl
+# list databases matching the db
+# At db you can use the wildcards * ?
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib_perl";
+use shelldb;
+use dbadmin;
+
+if (exists $input->{db}) {
+$input->{db} =~s/([^?*]+)/\Q$1\E/g;
+$input->{db} =~s|\?|.|g;
+$input->{db} =~s|\*+|.*?|g;
+$input->{db} = qr/^$input->{db}$/i
+}
+else {
+$input->{db} = qr/\S/
+}
+
+
+my $db;
+my $record;
+$output->{database}={};
+opendir DIR, $datadir or Exit(4, "Could not list databases because $!");
+
+
+while ($db = readdir DIR) {
+next unless ( ($db =~ $input->{db}) && (-d "$datadir/$db/metadata") && (-d "$datadir/$db/storage") );
+$output->{database}->{$db}->{name}	= $db;
+$output->{database}->{$db}->{status}= dbadmin::IsItMounted("$datadir/$db/data") ? 'open' : 'close';
+
+opendir STORAGE, "$datadir/$db/storage" or Exit(5, "Could not read $db/storage because $!");
+while ($_ = readdir STORAGE) { next unless -f "$datadir/$db/storage/$_"; push @{$output->{database}->{$db}->{datafile}}, {size=>[stat _]->[7], created=>[stat _]->[10], name=>$_} }
+closedir STORAGE;
+
+my ($error,$message) = dbadmin::MountInfo("$datadir/$db/data");
+
+	if ($error) {
+	$output->{database}->{$db}->{storage}=$message
+	}
+	else {
+	@{$output->{database}->{$db}->{storage}}{qw/size used avail pcent/} = @{$message}
+	}
+
+chdir "$datadir/$db/metadata";
+recursive_dir('.')
+}
+
+closedir DIR;
+Exit(1,"No matching database") unless %{$output->{database}};
+&Exit;
+
+
+
+		###############
+		#             #
+		#  Functions  #
+		#             #
+		###############
+
+
+
+sub recursive_dir
+{
+opendir my $dh, $_[0] or Exit(60,"Could not read directory : $_[0] , error : $!");
+
+	foreach my $key (grep ! /^\.+$/, readdir $dh)
+	{
+	my $fullpath = "$_[0]/$key";
+
+	 	if (-d $fullpath)
+		{
+		my @path = split /\//, $fullpath; shift @path;		
+		HashKeySet($output->{database}->{$db}, [@path]);
+		recursive_dir($fullpath)
+		}
+		else
+		{		
+		my @path = split /\//, $_[0]; shift @path;
+		my @data;
+		open FILE, '<:utf8', $fullpath or Exit(61,"Could not read file $fullpath , error $!");
+
+			while($record=<FILE>) {
+			next if $record=~/^\s*$/;
+			$record=~s/^\s*(.*?)\s*$/$1/;
+			push(@data, $record)
+			}
+
+		close FILE;
+
+			if (@data) {
+				if (@data > 1) {
+				HashKeySet($output->{database}->{$db}, [@path], [@data] )
+				}
+				else {
+				HashKeySet($output->{database}->{$db}, [@path], $data[0] )
+				}			
+			}
+		}
+	}
+
+closedir $dh
+}
+
+
+
+
+sub HashKeySet
+{
+my $Ref     = $_[0];
+my $lastkey = @{$_[1]} ? pop @{$_[1]} : 'data';
+
+	foreach (@{$_[1]})
+	{
+		if ( ref $Ref->{$_})
+		{
+			if	(ref $Ref->{$_} eq 'ARRAY')
+			{
+			my $hash;
+
+					for (my $i=0; $i<@{$Ref->{$_}}; $i++)
+					{
+					$hash->{ $Ref->{$_}->[$i] } = undef
+					}
+
+			$Ref->{$_} = $hash
+			}
+			elsif	(ref $Ref->{$_} eq 'SCALAR')
+			{		
+			$Ref->{$_} = { ${$Ref->{$_}} => undef }
+			}
+			elsif	(ref $Ref->{$_} ne 'HASH')
+			{
+			$Ref->{$_} = {}
+			}
+		}
+		else
+		{
+			if (defined $Ref->{$_})
+			{
+			$Ref->{$_} = { $Ref->{$_} => undef }
+			}
+			else
+			{			
+			$Ref->{$_} = {}	
+			}
+		}
+
+	$Ref = $Ref->{$_}
+	}
+
+
+	if (exists $Ref->{$lastkey})
+	{
+		if (exists $_[2])
+		{
+			if ('ARRAY' eq ref $Ref->{$lastkey})
+			{
+				if ('ARRAY' eq ref $_[2])
+				{	
+				push @{$Ref->{$lastkey}}, @{$_[2]}
+				}
+				else
+				{
+				push @{$Ref->{$lastkey}}, $_[2]
+				}
+			}
+			elsif ('HASH' eq ref $Ref->{$lastkey})
+			{
+				if ('HASH' eq ref $_[2])
+				{
+					foreach (keys %{$_[2]})
+					{
+					$Ref->{$lastkey}->{$_} = $_[2]->{$_}
+					}
+				}
+				else
+				{
+					if ( %{$Ref->{$lastkey}} )
+					{
+					# last key is a hash with data
+
+						if ('ARRAY' eq ref $_[2])
+						{
+							for (my $i=0; $i<@{$_[2]}; $i++)
+							{
+							$Ref->{$lastkey}->{ $_[2]->[$i] } = undef
+							}
+						}
+						else
+						{
+						$Ref->{$lastkey}->{ $_[2] } = undef
+						}
+					}
+					else
+					{
+					$Ref->{$lastkey} = $_[2]
+					}
+				}
+			}
+			else
+			{
+				if ('ARRAY' eq ref $_[2])
+				{
+				$Ref->{$lastkey} = [ $Ref->{$lastkey} , @{$_[2]} ]
+				}
+				else
+				{
+				$Ref->{$lastkey} = [ $Ref->{$lastkey} , $_[2] ]
+				}			
+			} 
+		}
+	}
+	else
+	{
+	$Ref->{$lastkey} = exists $_[2] ? $_[2] : {}
+	}
+}

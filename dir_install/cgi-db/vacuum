@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+# Delete all the data from a database without drop it
+# Example of POST request (json)    {"db" : "SomeDB"}
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib_perl";
+use shelldb;
+
+
+my $find= '/usr/bin/find';
+my $rm	= '/usr/bin/rm';
+
+
+$output->{database}=[];
+my $found;
+
+
+if (exists $input->{db}) {
+$input->{db} =~s/([^?*]+)/\Q$1\E/g;
+$input->{db} =~s|\?|.|g;
+$input->{db} =~s|\*+|.*?|g;
+$input->{db} = qr/^$input->{db}$/i
+}
+else {
+Exit(221, 'key db is missing from your input')
+}
+
+my $node;
+
+opendir DATADIR, $datadir or Exit(222, "Could not list databases because $!");
+while (my $db = readdir DATADIR) {
+next unless ( ($db =~ $input->{db}) && (-d "$datadir/$db/metadata") && (-d "$datadir/$db/data") );
+$found=1;
+
+opendir DBDIR, "$datadir/$db/data" or Exit(42, "Could not read database $db data because $!");
+	while (readdir DBDIR) {
+	next if /^\.\.?$/;
+	my $node = "$datadir/$db/data/$_";
+
+		if (-f $node) {
+		unlink $node or Exit(43, "Could not delete database $db file $node because $!")
+		}
+		else {
+		rename $node, "$node.__vacuum__" or Exit(44, "Could not mark for vacuum $node.__vacuum__ because $!");
+		system "$find \"$node.__vacuum__\" -depth -exec $rm -rf {} \\; 1> /dev/null 2>&1"
+		}
+	}
+
+closedir DBDIR;
+push @{$output->{database}}, $db
+}
+
+closedir DATADIR;
+Exit

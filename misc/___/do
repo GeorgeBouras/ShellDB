@@ -1,0 +1,67 @@
+#!/bin/sh
+#  switches
+#
+#	... ?pretty=true					human readable
+#	... ?pretty=canonical=true			sorting
+#	... ?pretty=true&canonical=true 	botth sorting and human readable
+
+export REQUEST_METHOD=POST
+export QUERY_STRING="pretty=true&canonical=false"
+
+#  --==  info  ==--
+
+#curl http://localhost:7000/info/about							echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/about
+#curl http://localhost:7000/info/license						echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/license
+#curl http://localhost:7000/info/enviroment?canonical=true		echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/enviroment
+
+#  --==  db . At db key you can use the wildcards * ?  ==--
+
+#curl -X POST -H "Content-Type: application/json" --data @/opt/shelldb/json.db-create      http://localhost:7000/db/create?pretty=true
+#curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1","size":"249715200"}' http://localhost:7000/db/expand
+#curl -X POST -H "Content-Type: application/json" --data '{"db" : "DB1"}'    http://localhost:7000/db/create
+#curl -X POST -H "Content-Type: application/json" --data '{"db" : "DB1"}'    http://localhost:7000/db/drop
+#curl -X POST -H "Content-Type: application/json" --data '{"db" : "DB*"}'    http://localhost:7000/db/open
+#curl -X POST -H "Content-Type: application/json" --data '{"db" : "DB2"}'    http://localhost:7000/db/close
+#curl -X POST -H "Content-Type: application/json" --data '{"db" : "db*"}'    http://localhost:7000/db/vacuum
+#curl -X GET  -H "Content-Type: application/json"                           'http://localhost:7000/db/list?pretty=true&canonical=true'
+#curl -X POST -H "Content-Type: application/json" --data '{"db" : "db*"}'    http://localhost:7000/db/list
+#curl -X POST -H "Content-Type: application/json" --data '{"db" : "db*"}' -s http://localhost:7000/db/list | jq '.database|.[]|{name,status}'
+
+
+#echo '{"db": "DB?" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/list
+#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/list | jq '.database|.[]|{name,status}'
+#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/list | jq '.database|.[].name'
+#echo '{"db": "DB3" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/create
+#echo '{"db": "DB2" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/drop
+#echo '{"db": "D??" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/open
+#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/close
+#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/vacuum
+#echo '{"db":"DB1","size":"249715200"}' | /usr/bin/perl /opt/shelldb/cgi-db/expand
+
+
+#  --==  sql  ==--
+
+#jq -c . json.insert | /usr/bin/perl /opt/shelldb/cgi-sql/insert
+#jq -c . json.query  | /usr/bin/perl /opt/shelldb/cgi-sql/query
+#jq -c . json.exist  | /usr/bin/perl /opt/shelldb/cgi-sql/exist
+#jq -c . json.rename | /usr/bin/perl /opt/shelldb/cgi-sql/rename
+#echo '{"db":"DB1","key":"joe"}'                    | /usr/bin/perl /opt/shelldb/cgi-sql/exist
+#echo '{"db":"DB1","key":"joe","check_data":false}' | /usr/bin/perl /opt/shelldb/cgi-sql/delete
+
+#curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1","key":"joe"}'  http://localhost:7000/exist
+#curl -X POST -H "Content-Type: application/json" --data @json.insert http://localhost:7000/insert?pretty=true
+#curl -X POST -H "Content-Type: application/json" --data @json.insert http://localhost:7000/insert
+#curl -X POST -H "Content-Type: application/json" --data @json.query  http://localhost:7000/query
+#curl -X POST -H "Content-Type: application/json" --data @json.rename http://localhost:7000/rename
+#curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1", "mode":"append", "data":{"joe":"foo"}}'   http://localhost:7000/insert
+#curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1","key":"joe",    "check_data":false}'  http://localhost:7000/delete
+#curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1","key":"2012/07","check_data":false}'  http://localhost:7000/delete
+
+
+#umount /var/lib/shelldb/DB1/data      2> /dev/null 1>&2
+#umount /var/lib/shelldb/DB1/snapshots 2> /dev/null 1>&2
+#umount /var/lib/shelldb/DB1/tmp       2> /dev/null 1>&2
+#losetup -D
+#rm -rf /var/lib/shelldb/DB1
+#echo '{ "db" : "DB1" }' | /usr/bin/perl /opt/shelldb/cgi-db/create
+#curl -X POST -H "Content-Type: application/json" --data @/opt/shelldb/json.db-create http://localhost:7000/db/create?pretty=true

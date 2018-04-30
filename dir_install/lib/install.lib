@@ -1,0 +1,414 @@
+# Functions used from the ShellDB installation utility
+#
+# George Bouras
+# george.mpouras@yandex.com
+# 26 Apr 2018
+# Greece, Athens
+
+
+function Help() {
+cat << EOF
+Syntax:
+
+install --install         : Install ShellDB
+install --remove          : Uninstall ShellDB
+install --uninstall       : Uninstall ShellDB
+install --remove    purge : Uninstall ShellDB and remove all databases
+install --uninstall purge : Uninstall ShellDB and remove all databases
+install --version         : Show version
+install --help            : Show this help screen
+install --about           : Show license
+install --license         : Show license
+EOF
+}
+
+
+function Version() {
+cat << EOF
+version      : $( __version )
+release date : ${opt[build_date]}
+user         : ${opt[user]}
+group        : ${opt[group]}
+data dir     : ${opt[datadir]}
+install dir  : ${opt[installdir]}
+log dir      : ${opt[logdir]}
+bind address : ${opt[address]}
+port         : ${opt[port]}
+EOF
+}
+
+
+function About() {
+cat << EOF
+ShellDB v$( __version ) is a fast and minimal document database
+
+George Bouras, georgios.mpouras@gmail.com
+Joanna Ntzougani
+Athens, Greece
+EOF
+}
+
+
+function License() {
+cat ${opt[scriptdir]}/LICENSE
+}
+
+
+function Ambiguous() {
+cat << EOF
+ShellDB $( __version )
+Ambiguous usage. Try:
+
+    install --help
+
+EOF
+}
+
+
+function SyntaxError() {
+cat << EOF
+ShellDB $( __version )
+Unknown argument "$1"
+Try:
+
+    install --help
+
+EOF
+}
+
+
+function __version() {
+
+	if [ -f ${opt[scriptdir]}/lib_perl/shelldb.pm ]; then
+		  i=${opt[scriptdir]}/lib_perl/shelldb.pm
+	else
+		if [ -f ${opt[scriptdir]}/dir_install/lib_perl/shelldb.pm ]; then
+			  i=${opt[scriptdir]}/dir_install/lib_perl/shelldb.pm
+		fi
+	fi
+
+echo $(${opt[grep]} VERSION $i | ${opt[sed]} -r -e "s/^.*'(.*)'.*$/\\1/")
+}
+
+
+function LocateFileAtPath() {
+for i in `echo $PATH | sed 's/:/\n/g'`
+do
+	if [ -f "$i/$1" ]; then
+	echo "$i/$1"
+	return
+	fi
+done
+exit 184
+}
+
+
+# Create and directory and give it to ${opt[user]}:${opt[group]}
+function CreateDir() {
+if [ ! -d $1 ]; then
+echo Create directory : $1
+	if ${opt[mkdir]} -p $1 2>/dev/null; then
+		if ! ${opt[chown]} -R ${opt[user]}:${opt[group]} $1 2>/dev/null; then
+		echo Could not give directory $1 to ${opt[user]}:${opt[group]} because $?
+		exit 185
+		fi
+	else
+	echo Could not create directory $1 because $?
+	exit 186
+	fi
+else
+echo Directory already exists : $1
+fi    
+}
+
+
+function SetOptions() {
+
+# Find the utilities we are going to use
+
+	for i in systemctl journalctl btrfs mkfs.btrfs modprobe lsmod make gcc perl cut getent grep sed groupadd nologin useradd losetup findmnt df find sudo mount umount chown mkdir mv cp rm id tar userdel groupdel;
+	do
+	opt[$i]=$(LocateFileAtPath $i)
+	if [ $? -ne 0 ]; then echo -e "Sorry could not found utility \"$i\" at your \$PATH\nInstall the corresponded package and try again"; exit 187 ; fi
+	done
+
+# Read the configuration from the  config/shelldb.cfg
+
+	if [ -f ${opt[scriptdir]}/config/shelldb.cfg ]; then
+		while read i; do 
+		key=$( echo $i | ${opt[cut]} -d '=' -f1 )
+		val=$( echo $i | ${opt[cut]} -d '=' -f2 )
+		opt[$key]=$val
+		done < ${opt[scriptdir]}/config/shelldb.cfg
+	else
+		if [ -f ${opt[scriptdir]}/dir_install/config/shelldb.cfg ]; then
+			while read i; do 
+			key=$( echo $i | ${opt[cut]} -d '=' -f1 )
+			val=$( echo $i | ${opt[cut]} -d '=' -f2 )
+			opt[$key]=$val
+			done < ${opt[scriptdir]}/dir_install/config/shelldb.cfg
+		else
+			echo Configuration file is missing : ${opt[scriptdir]}/dir_install/config/shelldb.cfg
+			exit 188
+		fi
+	fi
+}
+
+
+
+# Replace e.g
+#	my $grep = '/some/dir/grep' ;
+# to
+#	my $grep = '/usr/bin/grep';
+#
+function Replace_at_Perl() {
+echo Check paths at perl : $1
+
+	for key in "${!opt[@]}"; do
+	sed -r -i "s|^(my\s*\\\$$key\s*=\s*')(.*$key)'\s*;\s*$|\1${opt[$key]}';|g" $1
+	done
+}
+
+
+
+# Replace specific strings
+#
+#	/opt/shelldb      ->  ${opt[installdir]}
+#	/var/log/shelldb  ->  ${opt[logdir]}
+#	/var/lib/shelldb  ->  ${opt[datadir]}
+#	0.0.0.0           ->  ${opt[address]}
+#	7000              ->  ${opt[port]}
+#
+function Replace_strings() {
+echo Check paths at file : $1
+
+declare -A hash
+hash['0.0.0.0']=${opt[address]}
+hash['7000']=${opt[port]}
+hash['/opt/shelldb']=${opt[installdir]}
+hash['/var/log/shelldb']=${opt[logdir]}
+hash['/var/lib/shelldb']=${opt[datadir]}
+hash['/usr/bin/perl']=${opt[perl]}
+
+	for key in "${!hash[@]}"; do
+	sed -r -i "s|$key|${hash[$key]}|g" $1
+	done
+}
+
+
+
+function Install() {
+
+# Check if it is already installed
+
+	if [ -f /etc/systemd/system/shelldb.service ]; then
+	echo ShellDB is already installed
+	exit 189
+	fi
+
+# Check if we have root powers
+
+	if [ 0 -ne $(${opt[id]} -u) ]; then
+	echo Sorry $(${opt[id]} -un) , only root can run this utility.
+	exit 190
+	fi
+
+# Check if some important directories exists
+
+	for i in ${opt[scriptdir]}/dir_install ${opt[scriptdir]}/dir_root /etc/modules-load.d /etc/systemd/system /etc/sudoers.d /var/lib /var/log;
+	do
+		if [ ! -d $i ]; then
+		echo Exit because is missing the important directory : $i
+		exit 191
+		fi
+	done
+
+# Check perl modules
+
+	if [ 1 = $( ${opt[perl]} -le 'eval "use $ARGV[0]";print $@?0:1' JSON ) ]; then
+	echo Perl modules are installed
+	else
+	echo -e "\\nPerl module JSON is missing\\nyou can install it either from CPAN"
+	echo -e "\\n\thttps://metacpan.org/pod/JSON\\n\thttps://metacpan.org/pod/JSON::XS"
+	echo -e "\\nor you could use the package of your linux distribution\\ne.g. at RedHat/Centos you can\\n\\n\tyum install perl-JSON\\n\tyum install perl-JSON-PP\\n"
+	exit 192
+	fi
+	
+# Stop shelldb
+
+	echo Stop ShellDB
+	${opt[systemctl]} stop shelldb.service        1> /dev/null 2> /dev/null
+	${opt[systemctl]} stop shelldb-mount.service  1> /dev/null 2> /dev/null
+
+# Load btrfs driver
+
+	if [[ "" = `${opt[lsmod]} | ${opt[grep]} btrfs` ]]; then
+	echo Loading btrfs driver
+	echo btrfs > /etc/modules-load.d/btrfs.conf
+	${opt[modprobe]} btrfs
+	else
+	echo btrfs driver is loaded
+	fi
+
+# Create user and group if not exist
+
+    ${opt[getent]} group  ${opt[group]} >/dev/null || ${opt[groupadd]} --system ${opt[group]}
+    ${opt[getent]} passwd ${opt[user]}  >/dev/null || ${opt[useradd]}  --system -g ${opt[group]} -c "ShellDB system user" -M -d "${opt[installdir]}" -s ${opt[nologin]} ${opt[user]}
+
+# Create directories
+
+	for i in ${opt[installdir]}/bin ${opt[installdir]}/lib ${opt[installdir]}/documentation ${opt[datadir]} ${opt[logdir]}; do
+	CreateDir $i
+	done
+
+# Compile lighttpd 
+	
+	if [ -x ${opt[installdir]}/bin/lighttpd ]; then
+	echo lighttpd is already compiled
+	else
+	CreateDir ${opt[scriptdir]}/misc/compile
+
+		if [ ! -d ${opt[scriptdir]}/misc/compile/lighttpd ]; then
+		echo Extract lighttpd
+		${opt[tar]} -xf ${opt[scriptdir]}/misc/lighttpd-*.tar -C  ${opt[scriptdir]}/misc/compile
+		${opt[mv]}      ${opt[scriptdir]}/misc/compile/lighttpd-* ${opt[scriptdir]}/misc/compile/lighttpd	
+		fi
+
+		if [ ! -x ${opt[scriptdir]}/misc/compile/lighttpd/src/lighttpd ]; then
+		cd ${opt[scriptdir]}/misc/compile/lighttpd
+		echo Configure lighttpd, please wait ...
+		./configure --disable-static --enable-shared --without-pcre --without-zlib --without-bzip2 --without-webdav-props --without-sqlite --without-gdbm --without-lua --without-memcached 1> /dev/null
+		echo Compile lighttpd, please wait ...
+		${opt[make]} 1> /dev/null 2> /dev/null
+		cd ${opt[scriptdir]}
+		fi
+
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/lighttpd                /opt/shelldb/bin/
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/.libs/mod_staticfile.so /opt/shelldb/lib/
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/.libs/mod_indexfile.so  /opt/shelldb/lib/
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/.libs/mod_access.so     /opt/shelldb/lib/
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/.libs/mod_accesslog.so  /opt/shelldb/lib/
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/.libs/mod_alias.so      /opt/shelldb/lib/
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/.libs/mod_cgi.so        /opt/shelldb/lib/
+	${opt[mv]} --force ${opt[scriptdir]}/misc/compile/lighttpd/src/.libs/mod_dirlisting.so /opt/shelldb/lib/
+	${opt[rm]} -rf     ${opt[scriptdir]}/misc/compile
+	echo Clean up lighttpd compile enviroment
+	fi
+
+# Copy application files
+
+	echo Copy application files at ${opt[installdir]}
+	${opt[cp]} --force --archive ${opt[scriptdir]}/dir_install/*   ${opt[installdir]}
+	${opt[cp]} --force --archive ${opt[scriptdir]}/documentation/* ${opt[installdir]}/documentation
+	${opt[find]} ${opt[scriptdir]} -maxdepth 1 -type f -exec ${opt[cp]} --force --archive {} ${opt[installdir]} \;
+	${opt[chown]} -R ${opt[user]}:${opt[group]} ${opt[installdir]}
+
+	echo Copy operating system files
+	${opt[cp]} --force --archive ${opt[scriptdir]}/dir_root/* /
+
+# The copied files probably have wrong paths because user distribution is probably
+# different than the one this is installer was created but we can fixit !
+
+	# e.g.   my $sudo = '/usr/bin/sudo';
+	Replace_at_Perl ${opt[installdir]}/cgi-db/vacuum
+	Replace_at_Perl ${opt[installdir]}/cgi-sql/delete
+	Replace_at_Perl ${opt[installdir]}/cgi-sql/rename
+	Replace_at_Perl ${opt[installdir]}/lib_perl/dbadmin.pm
+	Replace_at_Perl ${opt[installdir]}/lib_perl/shelldb.pm
+
+	# e.g.   /var/log/shelldb
+	Replace_strings ${opt[installdir]}/config/webserver.conf
+	Replace_strings ${opt[installdir]}/cgi-sql/delete
+	Replace_strings ${opt[installdir]}/cgi-sql/exist
+	Replace_strings ${opt[installdir]}/cgi-sql/insert
+	Replace_strings ${opt[installdir]}/cgi-sql/query
+	Replace_strings ${opt[installdir]}/cgi-sql/rename
+	Replace_strings /etc/systemd/system/shelldb.service
+	Replace_strings /etc/systemd/system/shelldb-mount.service
+
+# Start ShellDB
+
+	echo Start ShellDB
+	${opt[systemctl]} daemon-reload                1> /dev/null 2> /dev/null
+	${opt[systemctl]} enable shelldb-mount.service 1> /dev/null 2> /dev/null
+	${opt[systemctl]} enable shelldb.service       1> /dev/null 2> /dev/null
+	${opt[systemctl]} start  shelldb-mount.service 1> /dev/null 2> /dev/null
+	${opt[systemctl]} start  shelldb.service       1> /dev/null 2> /dev/null
+	
+
+cat << EOF
+
+ShellDB installed successfully at ${opt[installdir]}/
+It is using the limited user ${opt[user]}
+Your databases will be at ${opt[datadir]}/
+Log files are at ${opt[logdir]}/
+
+If you are using firewall do not forget to
+allow the tcp port ${opt[port]}
+
+Quick test
+
+	curl localhost:7000/info/about
+	curl localhost:7000/info/license
+
+EOF
+}
+
+
+
+
+function Uninstall() {
+
+	if [ -f /etc/systemd/system/shelldb.service ]; then
+
+		if echo $2 | grep "purge" > /dev/null; then
+		echo Uninstall ShellDB and remove databases		
+		else
+		echo Uninstall ShellDB
+		fi
+
+	else
+
+		echo ShellDB is already uninstalled
+		exit 170
+
+	fi
+
+# Check if we have root powers
+
+	if [ 0 -ne $(${opt[id]} -u) ]; then
+	echo Sorry $(${opt[id]} -un) , only root can run this utility.
+	exit 171
+	fi
+
+echo Stop
+
+	${opt[systemctl]} stop    shelldb.service        1> /dev/null 2> /dev/null
+	${opt[systemctl]} stop    shelldb-mount.service  1> /dev/null 2> /dev/null
+	${opt[systemctl]} disable shelldb-mount.service  1> /dev/null 2> /dev/null
+
+echo Remove services
+
+	${opt[rm]} -f /etc/systemd/system/shelldb.service        1> /dev/null 2> /dev/null
+	${opt[rm]} -f /etc/systemd/system/shelldb-mount.service  1> /dev/null 2> /dev/null
+	${opt[rm]} -f /etc/sudoers.d/shelldb                     1> /dev/null 2> /dev/null
+
+echo Delete installation directories
+
+	${opt[rm]} -rf ${opt[installdir]}   1> /dev/null 2> /dev/null
+	${opt[rm]} -rf ${opt[logdir]}       1> /dev/null 2> /dev/null
+
+echo Delete user and group
+
+	groupdel ${opt[group]}                1> /dev/null 2> /dev/null
+	userdel --force --remove ${opt[user]} 1> /dev/null 2> /dev/null
+
+# remove databases if needed
+
+	if echo $2 | grep "purge" > /dev/null; then
+	echo Remove all ShellDB databases
+	${opt[find]} "${opt[datadir]}" -depth -exec ${opt[rm]} -rf {} \; 1> /dev/null 2> /dev/null &
+	fi
+
+echo ShellDB uninstalled successfully
+}

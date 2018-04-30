@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+# Rename a key. Example of POST request (json)
+# 
+#	{ 
+#	"db"         : "SomeDB",	The database
+#	"key"        : "/k1/k2",	old key
+#   "new_name"   : "/k1/k3",	new key
+#	"check_data" : false		true/false (optional) default is true
+#	}							If true, rename the key only if there are not sub-keys
+#								This is a safety guard for not deleting other keys by mistake
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use lib '/opt/shelldb/lib_perl';
+use shelldb;
+
+my $rm='/usr/bin/rm';
+
+exists $input->{$_} || Exit(2, "key \"$_\" is missing from your input") foreach qw/db key new_name/;
+$input->{$_} =~s/^\/*(.*?)\/*$/$1/ foreach qw/key new_name/;
+
+Exit(40, "The database $input->{db} do not exist")	unless -d "$datadir/$input->{db}/data";
+Exit(41, "The key $input->{key} do not exist")		unless -d "$datadir/$input->{db}/data/$input->{key}";
+Exit(43, '___ is a reserved name')					if $input->{new_name} eq '___';
+Exit(44, 'old and new keys are the same')			if $input->{new_name} eq $input->{key};
+
+
+if (exists $input->{check_data} ? $input->{check_data}=~/(?i)true|y|1/ ? 1:0 : 1) {
+opendir DIR, "$datadir/$input->{db}/data/$input->{key}";
+	while (readdir DIR) {
+	next if /^\.\.?$/;
+		if (-d "$datadir/$input->{db}/data/$input->{key}/$_") {
+		closedir DIR;
+		Exit(42, "Can not rename the key $input->{key} because it holds sub-keys. Try again with check_data:false")
+		}
+	}
+closedir DIR
+}
+
+
+if (-e "$datadir/$input->{db}/data/$input->{new_name}") {
+
+	if (-d "$datadir/$input->{db}/data/$input->{new_name}")
+	{
+	# The destination already exists and it is a directory.
+	# So we must move all its contents to the source directory
+	opendir DIR, "$datadir/$input->{db}/data/$input->{new_name}" or Exit(45, "Could not read existing $input->{new_name} because $!");
+
+		foreach (grep ! /^\.+$/, readdir DIR) {
+		Exit(46, "Could not rename sub-key because already exists at source $_") if -e "$datadir/$input->{db}/data/$input->{key}/$_"
+		}
+
+	rewinddir DIR;
+
+		foreach (grep ! /^\.+$/, readdir DIR) {
+		rename "$datadir/$input->{db}/data/$input->{new_name}/$_", "$datadir/$input->{db}/data/$input->{key}/$_" or Exit(47, "Merge operation or the same root keys failed because $!")
+		}
+
+	closedir DIR;
+	system $rm, '--recursive', '--force', "$datadir/$input->{db}/data/$input->{new_name}"
+	}
+	else {
+	unlink "$datadir/$input->{db}/data/$input->{new_name}" or Exit(48, "Could not delete sub-value $input->{new_name} because $!")  
+	}
+}
+
+
+if (rename "$datadir/$input->{db}/data/$input->{key}","$datadir/$input->{db}/data/$input->{new_name}") {
+Exit
+}
+else {
+Exit(49, "Could not rename key to $input->{new_name} because $!")
+}

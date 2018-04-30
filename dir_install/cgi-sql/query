@@ -1,0 +1,283 @@
+#!/usr/bin/perl
+# Query the database
+# Example of POST request (json)
+#
+#    {
+#    "db"        : "SomeDB",				# Obligatory
+#    "key"       : "/",						# Obligatory
+#    "max_level" : 2,						# Optional
+#    "filter"    : [						# Filters
+#         { 
+#         "level"      : "1",
+#         "applied_on" : "keys",
+#         "condition"  : "? < '2002'"
+#         }
+#      ]
+#    }
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use lib '/opt/shelldb/lib_perl';
+use shelldb;
+use feature qw/say/;
+
+exists $input->{$_} || Exit(5, "key '$_' is missing from your input") foreach qw/db key/;
+$input->{key}		=~s/^\/*(.*?)\/*$/$1/;
+$input->{max_level} = exists $input->{max_level} ? $input->{max_level} : 2000;
+$output->{data}		= {};
+Exit(6, "The database $input->{db} does not exist") unless -d "$datadir/$input->{db}/data";
+Exit(7, "Key does not exist")                       unless -d "$datadir/$input->{db}/data/$input->{key}";
+Exit(8, "Key max_level should be an integer")       unless $input->{max_level} =~/^\d+$/;
+
+my $level	= 0;
+my $skip	= 0;
+my $filter	= {key=>{}, value=>{}};
+my $record;
+
+
+
+# Parse and compile the filters
+if (exists $input->{filter}) {
+$input->{filter} = [ $input->{filter} ] if 'HASH' eq ref $input->{filter};
+Exit(9, "filter key is not a json of closures or just a single closure") unless 'ARRAY' eq ref $input->{filter};
+
+	foreach (my $i=0; $i<@{$input->{filter}}; $i++) {
+	exists $input->{filter}->[$i]->{$_} || Exit(10, 'filter '.($i+1)." is missing the key $_") foreach qw/level condition applied_on/;
+	Exit(11, 'level of filter '.($i+1)." is not an integer") unless $input->{filter}->[$i]->{level} =~/^\d+$/;
+	my $type;
+
+		if    ( $input->{filter}->[$i]->{applied_on}=~/(?i)^k/ ) { $type='key'   }
+		elsif ( $input->{filter}->[$i]->{applied_on}=~/(?i)^v/ ) { $type='value' }
+		else  { Exit(12, 'applied_on at filter '.($i+1)." of level evel $input->{filter}->[$i]->{level} should be keys or values") }
+
+	$input->{filter}->[$i]->{condition} =~s/\?/\$_[0]/gm;
+
+	#push @{$filter->{$type}->{$input->{filter}->[$i]->{level}}} ,  "sub{ $input->{filter}->[$i]->{condition} ? 1:0 }";
+	my $code = eval "sub{$input->{filter}->[$i]->{condition} ? 1:0}";
+	Exit(13, "Could not understand the $input->{filter}->[$i]->{level} level , $type filter condition $input->{filter}->[$i]->{condition} , possible syntax error") if $@;
+	push @{$filter->{$type}->{ $input->{filter}->[$i]->{level} }}, $code
+	}
+}
+
+#use Data::Dumper; print Dumper $filter; exit;
+
+delete $input->{filter};
+chdir "$datadir/$input->{db}/data/$input->{key}";
+recursive_dir('.');
+
+
+&Exit;
+
+
+
+
+
+		###############
+		#             #
+		#  Functions  #
+		#             #
+		###############
+
+
+
+
+sub recursive_dir
+{
+opendir my $dh, $_[0] or Exit(20,"Could not read directory $_[0] the error is $!");
+
+	foreach my $key (grep ! /^\.+$/, readdir $dh)
+	{
+	my $fullpath = "$_[0]/$key";
+	
+	 	if (-d $fullpath)
+		{
+		$level++;
+		$skip=0;
+
+			if (exists $filter->{key}->{$level}) {
+				foreach (@{$filter->{key}->{$level}}) {
+					unless ($_->($key)) {
+					$skip=1;
+					last
+					}
+				}
+			}
+
+			unless ($skip) {
+			#print "$level key : $fullpath\n";
+			my @path = split /\//, $fullpath; shift @path;
+			HashKeySet($output->{data}, [@path]);
+			recursive_dir($fullpath) if $input->{max_level} > $level
+			}
+
+		$level--
+		}
+		else
+		{
+		#print "$level val : $fullpath\n";
+		my @path = split /\//, $_[0]; shift @path;
+		my @data;
+		open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+
+			while($record=<FILE>) {
+			next if $record=~/^\s*$/;
+			$record=~s/^\s*(.*?)\s*$/$1/;
+			$skip=0;
+
+				if (exists $filter->{value}->{$level}) {
+					foreach (@{$filter->{value}->{$level}}) {
+						unless ($_->($record)) {
+						$skip=1;
+						last
+						}
+					}
+				}
+
+			push(@data, $record) unless $skip
+			}
+
+		close FILE;
+
+			if (@data) {
+				if (@data > 1) {
+				HashKeySet($output->{data}, [@path], [@data] )
+				}
+				else {			
+				HashKeySet($output->{data}, [@path], $data[0] )
+				}
+			}
+		}
+	}
+
+closedir $dh
+}
+
+
+
+
+
+
+# Sets a value to a hash deep key
+#
+#              HASH ,   LIST OF KEY PATH            VALUE OR LIST OF SUBKEYS
+#########################################################
+#	HashKeySet($hash,  ['a1', 'b2']                                       );
+#	HashKeySet($hash,  ['a1', 'b1', 'c2'],          2                     );
+#	HashKeySet($hash,  ['a1', 'b1', 'c1', 'popA'],  ['k1','v1','k2','v2'] );
+#	HashKeySet($hash,  ['a1', 'b1', 'c1', 'popC'],  'hello'               );
+#	HashKeySet($hash,  ['a1'],                      ['k7','v7','k8','v8'] );
+#
+sub HashKeySet
+{
+my $Ref     = $_[0];
+my $lastkey = @{$_[1]} ? pop @{$_[1]} : 'data';
+
+	foreach (@{$_[1]})
+	{
+		if ( ref $Ref->{$_})
+		{
+			if	(ref $Ref->{$_} eq 'ARRAY')
+			{
+			my $hash;
+
+					for (my $i=0; $i<@{$Ref->{$_}}; $i++)
+					{
+					$hash->{ $Ref->{$_}->[$i] } = undef
+					}
+
+			$Ref->{$_} = $hash
+			}
+			elsif	(ref $Ref->{$_} eq 'SCALAR')
+			{		
+			$Ref->{$_} = { ${$Ref->{$_}} => undef }
+			}
+			elsif	(ref $Ref->{$_} ne 'HASH')
+			{
+			$Ref->{$_} = {}
+			}
+		}
+		else
+		{
+			if (defined $Ref->{$_})
+			{
+			$Ref->{$_} = { $Ref->{$_} => undef }
+			}
+			else
+			{			
+			$Ref->{$_} = {}	
+			}
+		}
+
+	$Ref = $Ref->{$_}
+	}
+
+
+	if (exists $Ref->{$lastkey})
+	{
+		if (exists $_[2])
+		{
+			if ('ARRAY' eq ref $Ref->{$lastkey})
+			{
+				if ('ARRAY' eq ref $_[2])
+				{	
+				push @{$Ref->{$lastkey}}, @{$_[2]}
+				}
+				else
+				{
+				push @{$Ref->{$lastkey}}, $_[2]
+				}
+			}
+			elsif ('HASH' eq ref $Ref->{$lastkey})
+			{
+				if ('HASH' eq ref $_[2])
+				{
+					foreach (keys %{$_[2]})
+					{
+					$Ref->{$lastkey}->{$_} = $_[2]->{$_}
+					}
+				}
+				else
+				{
+					if ( %{$Ref->{$lastkey}} )
+					{
+					# last key is a hash with data
+
+						if ('ARRAY' eq ref $_[2])
+						{
+							for (my $i=0; $i<@{$_[2]}; $i++)
+							{
+							$Ref->{$lastkey}->{ $_[2]->[$i] } = undef
+							}
+						}
+						else
+						{
+						$Ref->{$lastkey}->{ $_[2] } = undef
+						}
+					}
+					else
+					{
+					$Ref->{$lastkey} = $_[2]
+					}
+				}
+			}
+			else
+			{
+				if ('ARRAY' eq ref $_[2])
+				{
+				$Ref->{$lastkey} = [ $Ref->{$lastkey} , @{$_[2]} ]
+				}
+				else
+				{
+				$Ref->{$lastkey} = [ $Ref->{$lastkey} , $_[2] ]
+				}			
+			} 
+		}
+	}
+	else
+	{
+	$Ref->{$lastkey} = exists $_[2] ? $_[2] : {}
+	}
+}

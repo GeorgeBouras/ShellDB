@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+# Expand an existing database
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib_perl";
+use shelldb;
+use dbadmin;
+
+my ($error,$message)=@_;
+my $loopdev;
+
+# Standard checks
+Exit(240, "key db is missing from your input")	unless exists $input->{db};
+Exit(241, "Not existing database $input->{db}")	unless -d "$datadir/$input->{db}";
+
+foreach (qw/storage metadata/) {
+Exit(242, "Database $input->{db} is missing the $_ directory") unless -d "$datadir/$input->{db}/$_"
+}
+
+foreach (qw/data snapshots/) {
+Exit(243, "Database $input->{db} is missing $_, probably is closed, try to db/open it first") unless -d "$datadir/$input->{db}/$_"
+}
+
+Exit(244, "Database $input->{db} is missing the data files") if ! glob "$datadir/$input->{db}/storage/*";
+Exit(245, "Database $input->{db} subvolume __DATA is not mounted as data")				unless dbadmin::IsItMounted("$datadir/$input->{db}/data");
+Exit(246, "Database $input->{db} subvolume __SNAPSHOTS is not mounted as snapshots")	unless dbadmin::IsItMounted("$datadir/$input->{db}/snapshots");
+
+
+unless (exists $input->{size}) {
+
+	if (-f "$datadir/$input->{db}/metadata/last_expansion/size/___") {
+	open FILE, '<', "$datadir/$input->{db}/metadata/last_expansion/size/___" or Exit(247, "Could read Database $input->{db} medata size because $!");
+	$input->{size} = readline FILE;
+	close FILE;
+	chomp $input->{size}
+	}
+	else {
+	$input->{size} = 314572800
+	}
+}
+
+Exit(248, "Database $input->{db} size (bytes) is not an integer")		if $input->{size} !~/^\d+$/;
+Exit(249, "Database $input->{db} expand size must be 100Mb or bigger")	if $input->{size} < 104857600;
+
+($error, $loopdev) = dbadmin::Datafile_create("$datadir/$input->{db}", $input->{size});	Exit($error, $loopdev) if $error;
+($error, $message) = dbadmin::Add_new_device( "$datadir/$input->{db}", $loopdev);		Exit($error, $message) if $error;
+
+open  FILE, '>', "$datadir/$input->{db}/metadata/last_expansion/size/___";
+print FILE "$input->{size}\n";
+close FILE;
+
+Exit(0, "Database $input->{db} successfully expanded by $input->{size} bytes")

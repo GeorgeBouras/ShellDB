@@ -1,0 +1,53 @@
+#!/usr/bin/perl
+# drop all database matching the db
+# At db you can use the wildcards * ?
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib_perl";
+use shelldb;
+use dbadmin;
+
+if (exists $input->{db}) {
+$input->{db} =~s/([^?*]+)/\Q$1\E/g;
+$input->{db} =~s|\?|.|g;
+$input->{db} =~s|\*+|.*?|g;
+$input->{db} = qr/^$input->{db}$/i
+}
+else {
+Exit(221, 'key db is missing from your input')
+}
+
+
+$output->{database}=[];
+my $found;
+
+opendir DIR, $datadir or Exit(222, "Could not list databases because $!");
+while (my $db = readdir DIR) {
+next unless ( ($db =~ $input->{db}) && (-d "$datadir/$db/metadata") );
+$found=1;
+
+	unless (-d "$datadir/$db/storage") {
+	dbadmin::DeleteDeepDirectory("$datadir/$db") or Exit(223, "Could not delete database $db");
+	push @{$output->{database}}, $db;
+	next
+	}
+
+	foreach (qw/data snapshots/) {
+	@{$output}{qw/error_code error_message/} = dbadmin::Umount("$datadir/$db/$_");
+	&Exit if $output->{error_code};
+	}
+
+@{$output}{qw/error_code error_message/} = dbadmin::Losetup_detach("$datadir/$db");		&Exit if $output->{error_code};
+@{$output}{qw/error_code error_message/} = dbadmin::Datafile_delete("$datadir/$db");	&Exit if $output->{error_code};
+					                       dbadmin::DeleteDeepDirectory("$datadir/$db")	or Exit(224, "Could not delete database $db");
+push @{$output->{database}}, $db
+}
+closedir DIR;
+
+@{$output}{'error_code','error_message'}=(225,'No matching database') unless $found;
+Exit

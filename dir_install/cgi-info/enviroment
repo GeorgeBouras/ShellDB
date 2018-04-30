@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+# Show the enviroment variables
+# You can remove this script if you want
+# Some important enviroment variables are
+#
+# 	REQUEST_SCHEME		http, https
+#	REQUEST_METHOD		GET POST DELETE PUT
+#	QUERY_STRING		pretty=true&canonical=true'
+#	REMOTE_ADDR			89.34.5.11
+#	CONTENT_LENGTH		234345 the posted data size in bytes
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use FindBin;
+use lib "$FindBin::Bin/../lib_perl";
+use shelldb;
+while (my ($k,$v) = each %ENV) {$output->{$k}=$v }
+&Exit

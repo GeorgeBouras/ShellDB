@@ -1,0 +1,18 @@
+small git cheat sheet
+github pages   https://guides.github.com/features/pages/
+github project https://github.com/GeorgeBouras/ShellDB
+
+create local repository
+
+	git init /work/ShellDB
+	cd       /work/ShellDB
+	git config --global http.postBuffer 157286400
+	git config --global user.email "georgios.mpouras@gmail.com"
+	git config --global user.name  "George Bouras"
+
+add
+
+	git add .
+
+	git tag    -a v1.1.0 -m "Initial release"
+	git commit -a        -m "Initial release"

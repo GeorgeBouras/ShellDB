@@ -1,0 +1,58 @@
+#!/usr/bin/perl
+# Open a database for serving requests
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib_perl";
+use shelldb;
+use dbadmin;
+
+if (exists $input->{db}) {
+$input->{db} =~s/([^?*]+)/\Q$1\E/g;
+$input->{db} =~s|\?|.|g;
+$input->{db} =~s|\*+|.*?|g;
+$input->{db} = qr/^$input->{db}$/i
+}
+else {
+Exit(260, 'key db is missing from your input')
+}
+
+$output->{database}=[];
+my $found;
+
+opendir DIR, $datadir or Exit(261, "Could not list databases because $!");
+while (my $db = readdir DIR) {
+next unless ( ($db =~ $input->{db}) && (-d "$datadir/$db/metadata") && (-d "$datadir/$db/storage") );
+$found=1;
+my $dev;
+opendir STORAGE, "$datadir/$db/storage" or Exit(262, "Could not read storage directory of database $db because $?");
+
+	foreach (sort {$a cmp $b} readdir STORAGE) {
+	next if /^\.+$/ || -d $_;
+	@{$output}{qw/error_code error_message/} = dbadmin::Losetup_create("$datadir/$db/storage/$_");
+	&Exit if $output->{error_code};
+	next if $dev;
+	$dev = $output->{error_message};
+	$output->{error_message} = 'success'
+	}
+
+closedir STORAGE;
+Exit(263, "Database $db is missing data files") unless $dev;
+
+# mount
+next if dbadmin::IsItMounted("$datadir/$db/data");
+
+	foreach (qw/data snapshots/) {
+	@{$output}{qw/error_code error_message/} = dbadmin::Mount_volume("$datadir/$db/$_", $dev);
+	&Exit if $output->{error_code}
+	}
+
+push @{$output->{database}}, $db
+}
+closedir DIR;
+@{$output}{'error_code','error_message'}=(264,'No matching database') unless $found;
+&Exit

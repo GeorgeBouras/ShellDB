@@ -1,0 +1,5 @@
+{
+"db"         : "SomeDB",
+"key"        : "/keya/k3",
+"check_data" : false
+}

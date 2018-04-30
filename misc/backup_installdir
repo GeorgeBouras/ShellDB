@@ -1,0 +1,3 @@
+#!/bin/sh
+
+tar cvJf /tmp/ShellDB.$(date +%F).tar.xz -C /opt `ls --format single-column ../.. | grep -i ShellDB-`

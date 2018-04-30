@@ -1,0 +1,15 @@
+{
+"db"      : "DB1",
+"size"    : "209715200",
+"metadata":
+
+	{
+	"description": "Test IO perfomance",
+	"Location":    "Greece/Athens",
+	"Owner":
+		{
+		"name":  "George Bouras",
+		"email": "george.mpouras@yandex.com"
+		}
+	}
+}

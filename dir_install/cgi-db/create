@@ -1,0 +1,80 @@
+#!/usr/bin/perl
+# Create new databases using btrfs volumes as data files
+# 
+# The __DATA      subvolume will mounted compressed at the directory $datadir/$db/data
+# The __SNAPSHOTS subvolume will mounted compressed at the directory $datadir/$db/snapshots
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::Bin/../lib_perl";
+use shelldb;
+use dbadmin;
+
+$input->{size}		//= 314572800;
+$input->{metadata}	//= {'description'=>'shell database', 'Owner'=>{ 'name'=>[ getpwuid($>) ]->[0] }};
+
+Exit(200, "key db is missing from your input") if ! exists $input->{db};
+Exit(201, "Whitespaces are not permitted at database names ($input->{db})")	if $input->{db} =~/\s/;
+Exit(202, "Database size (bytes) is not an integer")						if $input->{size} !~/^\d+$/;
+Exit(203, "Database size (bytes) must be 100Mb or bigger")					if $input->{size} < 104857600;
+
+for (qw/data snapshots/) { Exit(204, "Directory $_ of database $input->{db} is already mounted") if dbadmin::IsItMounted("$datadir/$input->{db}/$_") }
+
+
+# Delete the db dir if exists but do not contain any data files
+if (-d "$datadir/$input->{db}/storage") {
+	
+	if ( glob "$datadir/$input->{db}/storage/*" ) {
+	Exit(205, "Could not create database $input->{db} because it contains data files. Maybe you should db/open it")
+	}
+	else {
+	dbadmin::DeleteDeepDirectory("$datadir/$input->{db}") or Exit(206, "Could not delete corrupt database $input->{db}")
+	}
+}
+
+foreach ('', 'tmp', 'storage', 'metadata') { mkdir "$datadir/$input->{db}/$_" or Exit(207, "Could not create the database $input->{db} directory $_ because $!") unless -d "$datadir/$input->{db}/$_" }
+
+@{$input->{metadata}}{qw/CreationTime last_expansion/} = ($^T, {size=>$input->{size}, time=>$^T});
+
+Walker( $input->{metadata} );
+
+
+
+# The Datafile_create returs : ERROR, DEVICENAME
+@{$output}{qw/error_code error_message/} = dbadmin::Datafile_create("$datadir/$input->{db}", $input->{size}); &Exit if $output->{error_code};
+@{$output}{qw/error_code error_message/} = dbadmin::Create_volume(  "$datadir/$input->{db}", $output->{error_message});
+&Exit;
+
+
+
+
+sub Walker {
+my $data=shift;
+if    ('SCALAR' eq ref $data) { Walker(${$data},    @_)                          }
+elsif ('ARRAY'  eq ref $data) { Walker($_,          @_)     for @{$data}         }
+elsif ('HASH'   eq ref $data) {	Walker($data->{$_}, @_, $_) for sort keys %$data }
+else  {
+
+	$data=~s/\s*$//;
+	my $dir = join '/', "$datadir/$input->{db}/metadata", @_;
+	Create_nested_directory($dir) or Exit(10, "Could not create dir $dir because $!");
+	open  FILE, '>:utf8', "$dir/___" or Exit(11, "Could not create file $dir/___");
+	print FILE "$data\n";
+	close FILE
+	}
+}
+
+
+sub Create_nested_directory {
+my @Mkdir = split /\/+/, $_[0];
+return $_[0] unless @Mkdir;
+splice(@Mkdir, 0, 2, "/$Mkdir[1]") if (($Mkdir[0] eq '') && (scalar @Mkdir > 0));
+my $i;
+for ($i=$#Mkdir; $i>=0; $i--)     { last if -d join '/', @Mkdir[0..$i] }
+for (my $j=$i+1; $j<@Mkdir; $j++) { mkdir join('/', @Mkdir[0 .. $j]) or return undef }
+$_[0]
+}

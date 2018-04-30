@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+# Checks if a keys exist, Example of POST request (json)
+# 
+#	{ "db" : "SomeDB", "key" : "/Some/key" }
+#
+# George Bouras
+# george.mpouras@yandex.com
+
+use lib '/opt/shelldb/lib_perl';
+use shelldb;
+
+exists $input->{$_} || Exit(2, "key \"$_\" is missing from your input") foreach qw/db key/;
+Exit(37, "The database $input->{db} does not exist") unless -d "$datadir/$input->{db}/data";
+
+$input->{key} =~s/^\/*(.*?)\/*$/$1/;
+
+if (-d "$datadir/$input->{db}/data/$input->{key}") {
+$output->{data}	= -f "$datadir/$input->{db}/data/$input->{key}/___" ? 'contain value' : 'does not contain value';
+Exit(0,'exist')
+}
+else {
+Exit(0,'missing')
+}
