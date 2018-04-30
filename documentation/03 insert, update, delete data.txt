@@ -59,10 +59,7 @@ insert , Insert or update data
 	"db"     : "DB1",
 	"append" : false,
 	"data"   : {
-		"192.168.0.34" : {
-		  "host"   : "srv34",
-		  "status" : "up"
-	    }
+	  "192.168.0.34" : { "host":"srv34", "status":"up" }
 	  }
 	}
 
