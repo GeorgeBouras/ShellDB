@@ -1,0 +1,48 @@
+Database management is under the path /db
+The following routes are available
+
+	create : Create new DB
+	list   : List  DBs
+	open   : Open  DB
+	close  : Close DB so it can not written or queried
+	drop   : Delete DB
+	vacuum : Delete all DB data
+	expand : Online expand DB size
+
+
+create , Create a new database
+------------------------------
+
+	POST db/create
+	At the posted JSON data we can spefify the initial size, and arbitary metadata
+
+	{
+	"db"      : "DB1",
+	"size"    : "209715200",
+	"metadata":
+     
+		{
+		"description": "Test IO perfomance",
+		"Location":    "Greece/Athens",
+		"Owner":
+			{
+			"name":  "George Bouras",
+			"email": "george.mpouras@yandex.com"
+			}
+		}
+	}
+
+
+	examples
+	curl -XPOST -H"Content-Type: application/json" -d '{"db" : "DB1"}' localhost:7000/db/create
+	curl -XPOST -H"Content-Type: application/json" -d  @data.json      localhost:7000/db/create
+
+
+
+
+
+drop , Deletes one or more databases
+
+	curl -XPOST -H"Content-Type: application/json" --data '{"db" : "DB1"}'  localhost:7000/db/drop
+
+	curl -XPOST -H"Content-Type: application/json" --data '{"db" : "DB?"}'  localhost:7000/db/list
