@@ -1,7 +1,12 @@
 Query operations are available at path /query
 
-POST db/insert
+POST db/query
 
 Query the database at any level using filters
 The filters are applied at search time so the I/O is reduced as much as possible
 You can apply filters at keys, at values or both at keys/values
+
+Filters are optional. Usually is better to hit a deep key directly than a shallow one using filters to narrow your search
+
+As usuall the query is a json document posted at the server e.g.
+curl -XPOST -H"Content-Type: application/json" -data @query.json 'localhost:7000/query?canonical=true'
