@@ -1,0 +1,26 @@
+Accessing ShellDB features is done through a simple REST interface
+For example to view is everything work you can use the routes
+
+	localhost:7000/info/about
+	localhost:7000/info/license	
+	localhost:7000/info/enviroment
+
+You have to open the tcp port 7000 at your firewall for remote access
+Also you have to replace the localhost with your real server IP Address
+
+Optional You can alter the received JSON anwser by using the switches
+
+	... ?pretty=canonical=false			JSON keys are at random order (default)
+	... ?pretty=canonical=true			JSON keys are sorted
+	... ?pretty=true					human readable (default)
+	... ?pretty=false					One line serialized
+	... ?pretty=true&canonical=true 	sorting and human readable
+
+So if we using the curl command line utility as client the
+test urls can be written as
+
+	curl -X GET http://localhost:7000/info/about?pretty=true
+	curl -X GET http://localhost:7000/info/license?pretty=false
+	curl -X GET http://localhost:7000/info/enviroment?canonical=true
+
+These swithes can be used an all REST calls
