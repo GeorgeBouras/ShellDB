@@ -14,10 +14,12 @@ You can apply filters at keys, at values or both at keys/values
 
 Filters are optional. Usually is better to hit a deep key directly than a shallow one using filters to narrow your search
 
-if you have multiple filters all must be TRUE, but inside every filter you can have OR between filter's conditions. You can have multiple blocks at every filter using parenthesis
+if you have multiple filters all must be TRUE, but inside every filter you can have OR between filter's conditions.
+You can have multiple blocks at every filter using parenthesis/
 At every filter you must define the level that should be checked against
 
-At filter's condtitions you can use the usual operators and simple functionms common to all languages (substr, index, etc) and regular expressions
+At filter's condtitions you can use the usual operators and simple functionms common
+to all languages (substr, index, etc) and regular expressions
 
 	>    greater than     arithmetic
 	>=   greater or equal arithmetic
