@@ -10,9 +10,18 @@ create local repository
 	git config --global user.email "georgios.mpouras@gmail.com"
 	git config --global user.name  "George Bouras"
 
+set remote https url ( origin )
+
+ 	git remote set-url origin https://github.com/GeorgeBouras/ShellDB.git
+	git remote -v
+
 add
 
 	git add .
-
 	git tag    -a v1.1.0 -m "Initial release"
 	git commit -a        -m "Initial release"
+
+push remote
+
+
+    git push origin master
