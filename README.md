@@ -33,5 +33,8 @@ The install, uninstall procedure is dead simple
 
 That is all you need to know to have ShellDB started. So get the code, install it, read the short API documentation and have some fun with it.
 
+	https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/01%20generic.txt
+	https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/02%20manage%20databases.txt
+
 George Bouras
 georgios.mpouras@gmail.com
