@@ -68,7 +68,7 @@ insert , Insert or update data
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1", "mode":"append", "data":{"joe":"foo"}}' localhost:7000/insert
 
 
-delete : Delete selected keys
+delete , Delete selected keys
 -----------------------------
 
 	POST db/delete
@@ -80,3 +80,13 @@ delete : Delete selected keys
 	examples:
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"joe",    "check_data":false}' localhost:7000/delete
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"2012/07","check_data":false}' localhost:7000/delete
+
+
+exist , Check if a key exists
+-----------------------------
+
+	POST db/exist
+
+	examples:
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"192"}'     localhost:7000/exist
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"192/168"}' localhost:7000/exist
