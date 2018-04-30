@@ -29,6 +29,7 @@ The install, uninstall procedure is dead simple
 	./install --version
 	./install --help
 	./install -–about
+	./install -–license
 
 That is all you need to know to have ShellDB started. So get the code, install it, read the short API documentation and have some fun with it.
 
