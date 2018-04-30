@@ -3,11 +3,11 @@ The following routes are available
 
 	create : Create new DB
 	list   : List  DBs
-	open   : Open  DB
-	close  : Close DB so it can not written or queried
 	drop   : Delete DB
 	vacuum : Delete all DB data
 	expand : Online expand DB size
+	open   : Open  DB
+	close  : Close DB so it can not written or queried
 
 
 create , Create a new database
@@ -37,7 +37,6 @@ create , Create a new database
 	curl -XPOST -H"Content-Type: application/json" -d  @data.json      localhost:7000/db/create
 
 
-
 list , List one or more databases
 ---------------------------------
 
@@ -47,26 +46,57 @@ list , List one or more databases
 	Optional you can use the jq for post edit the results
 	
 	examples:
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"db*"}' localhost:7000/db/list
+
 	curl    http://localhost:7000/db/list
 	curl   'http://localhost:7000/db/list?canonical=true'
 	curl -s http://localhost:7000/db/list | jq '.database|.[]|{name,status}'
 
-	curl -XPOST -H"Content-Type: application/json" -d '{"db":"db*"}'  localhost:7000/db/list
-
-
-
-open , Open one or more database
---------------------------------
-
-
-
 
 drop , Deletes one or more databases
+------------------------------------
 
-	curl -XPOST -H"Content-Type: application/json" --d '{"db":"DB1"}' localhost:7000/db/drop
-	curl -XPOST -H"Content-Type: application/json" --d '{"db":"D??"}' localhost:7000/db/drop
-	curl -XPOST -H"Content-Type: application/json" --d '{"db":"*"}'   localhost:7000/db/drop
+	POST db/drop
+	Delete one or more databases using the * ? wildcards
+	examples:
 
-list, List one or more databases
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1"}' localhost:7000/db/drop
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"D??"}' localhost:7000/db/drop
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"*"}'   localhost:7000/db/drop
 
-	curl -XPOST -H"Content-Type: application/json" --data '{"db" : "DB?"}'  localhost:7000/db/list
+
+vacuum , Delete all DB data
+---------------------------
+
+	POST db/drop
+	Empty databases from data
+	examples:
+
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"db*"}' localhost:7000/db/vacuum
+
+
+expand : Expand database size while it is open
+----------------------------------------------
+
+	POST db/expand
+	Define the bytes you want to add
+
+	examples:
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","size":"249715200"}' localhost:7000/db/expand
+
+
+open  , Open  one or more databases
+close , Close one or more databases
+-----------------------------------
+	
+	POST db/open
+	POST db/close
+	When you start ShellDB all databases are at open status.
+	When you stop  ShellDB all databases are closed.
+	When you create a new database is also at open status
+	But there are cases that you may want to close or open a database
+	manual. You can not insert data or query a closed database.
+
+	examples:
+	curl -XPOST -H"Content-Type: application/json" -d '{"db" : "DB*"}' localhost:7000/db/open
+	curl -XPOST -H"Content-Type: application/json" -d '{"db" : "DB2"}' localhost:7000/db/close
