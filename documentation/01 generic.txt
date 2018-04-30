@@ -1,5 +1,7 @@
-Accessing ShellDB features is done through a simple REST interface.
-For example as test to view if everything is ok you can use the routes
+Access of ShellDB is though simple http REST calls
+
+Info operations are available at path /db
+The following methods are available
 
 	localhost:7000/info/about
 	localhost:7000/info/license	

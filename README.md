@@ -4,9 +4,9 @@ Its scope is to store and retrieve data structures partial or completed. Inserte
 
 To retrieve exactly the documents parts you want there are simple filters you can use. Details are at the corresponded documentation.
 
-As transfer layer we use the REST http API served from an embedded lighthttpd listening at port 7000 by default. The lighthttpd is not conflicting with any other web server you may have installed.
+All operation are performed from the http REST API served from an embedded lighthttpd web server listening at port 7000 by default. This embedded lighthttpd do not conflict with any other web server you may have.
 
-For DB data files we use compressed private Btrfs volumes. These volumes are pointing to regular files created when you create a new database, and deleted when you drop it
+The database data files are compressed private Btrfs volumes. These volumes are pointing to regular files, created when you create a new database, and deleted when you drop it.
 
 Why ShellDB is fast.
 

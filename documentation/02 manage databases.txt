@@ -1,5 +1,5 @@
-Database management is under the path /db
-The following routes are available
+Database management operations are available at path /db
+The following methods are available
 
 	create : Create new DB
 	list   : List  DBs

@@ -1,0 +1,84 @@
+Data operations are available at path / 
+The following methods are available
+
+	insert : Insert, update data
+	delete : Delete selected keys
+	exist  : Check if a key exists
+	rename : Rename a key
+	query  : query the database
+	
+
+insert , Insert or update data
+------------------------------
+
+	POST db/insert
+	Inserted data can be : Values, Lists, Hashes (Associative arrays)
+	append key can be true or false (default)
+	When append is true  data are appended to  the existing
+	When append is false data are over writing the existing (default)
+	Example of posted data to insert
+
+	{
+	"db"     : "DB1",
+	"append" : false,
+	"data"   : {
+		"01" : {
+			"name"  : "Joe",
+			"last"  : "Average",
+			"hash"  : { "k1":"v1" , "k2":"v2"},
+			"array" : [ "item1", "item2", "item3" ]
+			}
+		}
+	}
+
+
+	It is up to you to select the structure of the inserted data because
+	it have great impact at the queris. For example Storing IP addresses as
+
+	{
+	"db"     : "DB1",
+	"append" : false,
+	"data"   : {
+		"192" : {
+		"168" : {
+			"0" : {
+				"34" : {
+				"host"   : "srv34",
+				"status" : "up"
+			  }
+			}
+		  }
+		}
+	  }
+	}
+
+	We can have faster queries than storing the same data as
+
+	{
+	"db"     : "DB1",
+	"append" : false,
+	"data"   : {
+		"192.168.0.34" : {
+		  "host"   : "srv34",
+		  "status" : "up"
+	    }
+	  }
+	}
+
+	examples:
+	curl -XPOST -H"Content-Type: application/json" -d @data.json localhost:7000/insert
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1", "mode":"append", "data":{"joe":"foo"}}' localhost:7000/insert
+
+
+delete : Delete selected keys
+-----------------------------
+
+	POST db/delete
+	Delete deep keys from the stored data structurss
+	check_data key can be false or true (default)
+	If check_data is true, deletes the key only if there are not sub-keys
+	This is a safety guard for not deleting other keys by mistake
+
+	examples:
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"joe",    "check_data":false}' localhost:7000/delete
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"2012/07","check_data":false}' localhost:7000/delete
