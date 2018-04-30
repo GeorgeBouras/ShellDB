@@ -36,19 +36,19 @@ insert , Insert or update data
 	it have great impact at the queris. For example Storing IP addresses as
 
 	{
-	"db"     : "DB1",
-	"append" : false,
-	"data"   : {
-		"192" : {
-		"168" : {
-			"0" : {
-				"34" : {
-				"host"   : "srv34",
-				"status" : "up"
-			  }
-			}
-		  }
-		}
+	"db"    : "DB1",
+	"append": false,
+	"data"  : {
+	  "192" : {
+	    "168": {
+	       "0": {
+	        "34":{
+	          "host"  : "srv34",
+	          "status": "up"
+	          }
+	        }
+	      }
+	    }
 	  }
 	}
 
