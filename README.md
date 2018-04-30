@@ -21,6 +21,9 @@ To stop, start the embedded web server and mount your databases use
 
 The install, uninstall procedure is dead simple
 
+
+	git clone https://github.com/GeorgeBouras/ShellDB.git
+	cd ShellDB
 	./install –install
 	./install –remove
 	./install --remove purge	( remove also the DBs )
