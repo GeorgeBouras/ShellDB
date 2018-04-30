@@ -52,7 +52,8 @@ insert , Insert or update data
 	  }
 	}
 
-	We can have faster queries than storing the same data as
+	We can have faster queries, actually faster than other
+	commercial products than storing the same data as
 
 	{
 	"db"     : "DB1",
