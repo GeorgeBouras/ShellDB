@@ -39,5 +39,7 @@ That is all you need to know to have ShellDB started. So get the code, install i
 
 <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/03%20insert%2C%20update%2C%20delete%20data.txt">Insert, Update, Delete, Rename, Check data</a>
 
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/04%20query.txt">Reporting</a>
+
 George Bouras
 georgios.mpouras@gmail.com

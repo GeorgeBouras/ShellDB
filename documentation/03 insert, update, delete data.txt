@@ -5,8 +5,7 @@ The following methods are available
 	delete : Delete selected keys
 	exist  : Check if a key exists
 	rename : Rename a key
-	query  : query the database
-	
+
 
 insert , Insert or update data
 ------------------------------
