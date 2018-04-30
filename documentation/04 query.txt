@@ -4,4 +4,4 @@ POST db/insert
 
 Query the database at any level using filters
 The filters are applied at search time so the I/O is reduced as much as possible
-You can apply filters at keys, at values or at both keys and values
+You can apply filters at keys, at values or both at keys/values
