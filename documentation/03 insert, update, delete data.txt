@@ -86,7 +86,30 @@ exist , Check if a key exists
 -----------------------------
 
 	POST db/exist
+	The key can be nested on a deep level
 
 	examples:
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"192"}'     localhost:7000/exist
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"192/168"}' localhost:7000/exist
+
+
+rename , Rename a key
+---------------------
+
+	POST db/rename
+	The key can be nested on a deep level
+	check_data key can be false or true (default)
+	If check_data is true, rename the key only if there are not sub-keys
+	This is a safety guard for not affecting other keys by mistake
+	Example of posted data
+
+	{
+	"db"         : "DB1",
+	"key"        : "2012/04/10",
+	"new_name"   : "2012/04/03",
+	"check_data" : false
+	}
+
+	examples:
+	curl -XPOST -H"Content-Type: application/json" --data @file.json localhost:7000/rename
+
