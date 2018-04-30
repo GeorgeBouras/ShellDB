@@ -11,7 +11,7 @@ For DB data files we use compressed private Btrfs volumes. These volumes are poi
 Why ShellDB is fast.
 
 The data structures are stored inside the Btrfs volumes as common files and directories.  The directories are used to store the key names while the files are storing their values.
-Except from the embedded web server, there is no other process running to slow down your server or to consume your server memory !
+Except from the embedded web server, there is no other process running to slow down your server or to consume your server memory. Also it is almost impossible to corrupt a database because there are not any index files.
 
 The insert,query,delete etc requests, are performed from very small and fast shell scripts, so that’s where ShellDB name is came from. For the time being only linux is supported.
 

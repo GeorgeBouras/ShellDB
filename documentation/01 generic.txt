@@ -16,6 +16,14 @@ Optional You can alter the received JSON anwser by using the switches
 	... ?pretty=false                 One line serialized
 	... ?pretty=true&canonical=true   sorting and human readable
 
+At the reply there are the keys
+
+	"error_code"    : 0,
+	"error_message" : "success"
+
+If there is problem during the operation the error_code is not 0 and
+the error_message contains the actuall error that you should correct.
+
 So if we using the curl command line utility as client the
 test urls can be written as
 
