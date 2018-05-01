@@ -13,3 +13,12 @@ lighthttpd
 	/opt/shelldb/bin/lighttpd -D  -f /opt/shelldb/config/webserver.conf -m /opt/shelldb/lib		# start foreground
 	/opt/shelldb/bin/lighttpd     -f /opt/shelldb/config/webserver.conf -m /opt/shelldb/lib		# start background
 	/usr/bin/kill -s INT $(/usr/bin/cat /opt/shelldb/bin/run/webserver.pid)						# stop
+
+create DB manual
+
+	umount /var/lib/shelldb/DB1/data      2> /dev/null 1>&2
+	umount /var/lib/shelldb/DB1/snapshots 2> /dev/null 1>&2
+	losetup -D
+	rm -rf /var/lib/shelldb/DB1
+	echo '{ "db" : "DB1" }' | /usr/bin/perl /opt/shelldb/cgi-db/create
+	curl -X POST -H "Content-Type: application/json" --data @/opt/shelldb/json.db-create http://localhost:7000/db/create

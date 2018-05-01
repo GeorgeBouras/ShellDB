@@ -41,5 +41,7 @@ That is all you need to know to have ShellDB started. So get the code, install i
 
 <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/04%20query.txt">Reporting</a>
 
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/05%20local%20operations.txt">Local operations</a>
+
 George Bouras
 georgios.mpouras@gmail.com

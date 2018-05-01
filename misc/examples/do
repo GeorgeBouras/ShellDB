@@ -56,12 +56,3 @@ export QUERY_STRING="pretty=true&canonical=false"
 #curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1", "mode":"append", "data":{"joe":"foo"}}'   http://localhost:7000/insert
 #curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1","key":"joe",    "check_data":false}'  http://localhost:7000/delete
 #curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1","key":"2012/07","check_data":false}'  http://localhost:7000/delete
-
-
-#umount /var/lib/shelldb/DB1/data      2> /dev/null 1>&2
-#umount /var/lib/shelldb/DB1/snapshots 2> /dev/null 1>&2
-#umount /var/lib/shelldb/DB1/tmp       2> /dev/null 1>&2
-#losetup -D
-#rm -rf /var/lib/shelldb/DB1
-#echo '{ "db" : "DB1" }' | /usr/bin/perl /opt/shelldb/cgi-db/create
-#curl -X POST -H "Content-Type: application/json" --data @/opt/shelldb/json.db-create http://localhost:7000/db/create?pretty=true
