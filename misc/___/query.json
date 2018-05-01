@@ -1,0 +1,11 @@
+{
+"db"     : "DB1",
+"key"    : "192/168/0/34",
+"filter" : [ 
+             { 
+             "level"      : "1",
+             "applied_on" : "values",
+             "condition"  : "(? eq 'http') or (? =~/^f/i )"
+             }
+           ]
+}

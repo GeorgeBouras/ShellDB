@@ -5,7 +5,7 @@ POST db/query
 Query the database at any level using filters
 
 As usuall the query is a json document posted at the server e.g.
-curl -XPOST -H"Content-Type: application/json" -data @query.json 'localhost:7000/query?canonical=true'
+curl -XPOST -H"Content-Type: application/json" -d @query.json 'localhost:7000/query?canonical=true'
 
 You can limit the levels of how deep the query will dig by using the key  max_level
 
@@ -36,3 +36,58 @@ to all languages (substr, index, etc) and regular expressions
 	or   logical OR
 	and  logical AND
 
+
+
+Query examples:
+if we insert the data
+
+	{
+	"db"    : "DB1",
+	"append": false,
+	"data"  : {
+	  "192" : {
+	    "168": {
+	       "0": {
+	        "34":{
+	          "host"  : "srv34",
+	          "status": "up",
+	          "role"  : [ "http", "ftp", "db", "file", "mail" ]
+	          }
+	        }
+	      }
+	    }
+	  }
+	}
+
+
+we can have the queries
+
+	{
+	"db"        : "DB1",
+	"key"       : "192",
+	"max_level" : 5
+	}
+
+	{
+	"db"  : "DB1",
+	"key" : "192/168/0/34"
+	}
+
+	{
+	"db"  : "DB1",
+	"key" : "192/168/0/34/status"
+	}
+
+	{
+	"db"     : "DB1",
+	"key"    : "192/168/0/34",
+	"filter" : [ 
+	             { 
+                 "level"      : "1",
+	             "applied_on" : "values",
+	             "condition"  : "(? eq 'http') or (? =~/^f/i )"
+			     }
+	           ]
+	}
+
+	the last one will returnn only the roles "http", and "ftp", "file" because their name is starting from the letter f

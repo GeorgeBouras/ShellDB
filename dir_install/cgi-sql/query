@@ -173,7 +173,7 @@ closedir $dh
 sub HashKeySet
 {
 my $Ref     = $_[0];
-my $lastkey = @{$_[1]} ? pop @{$_[1]} : 'data';
+my $lastkey = @{$_[1]} ? pop @{$_[1]} : 'value';
 
 	foreach (@{$_[1]})
 	{
