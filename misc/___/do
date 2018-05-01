@@ -50,7 +50,7 @@ export QUERY_STRING="pretty=true&canonical=false"
 
 #curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1","key":"joe"}'  http://localhost:7000/exist
 #curl -X POST -H "Content-Type: application/json" --data @json.insert http://localhost:7000/insert?pretty=true
-#curl -X POST -H "Content-Type: application/json" --data @json.insert http://localhost:7000/insert
+#curl -X POST -H "Content-Type: application/json" --data @insert.json http://localhost:7000/insert
 #curl -X POST -H "Content-Type: application/json" --data @json.query  http://localhost:7000/query
 #curl -X POST -H "Content-Type: application/json" --data @json.rename http://localhost:7000/rename
 #curl -X POST -H "Content-Type: application/json" --data '{"db":"DB1", "mode":"append", "data":{"joe":"foo"}}'   http://localhost:7000/insert

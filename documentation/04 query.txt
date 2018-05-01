@@ -90,4 +90,82 @@ we can have the queries
 	           ]
 	}
 
-	the last one will returnn only the roles "http", and "ftp", "file" because their name is starting from the letter f
+the last one will returnn only the roles "http", and "ftp", "file" because their name is starting from the letter f
+Lets view an other example. Load the data
+
+	{
+	"db"     : "DB1",
+	"append" : false,
+	"data"   : {
+		"2000" : {
+			"01" : {
+				"01" : "v1",
+				"10" : [ "a1", "a2", "a3" ],
+				"30" : [ "b1", "b2", "b3" ]
+				},
+			"02" : {
+				"01" : "v2",
+				"10" : [ "c1", "d2", "c3" ],
+				"28" : [ "d1", "d2", "d3" ]
+				}
+			},
+		"2012" : {
+			"04" : {
+				"01" : "v3",
+				"10" : [ "d1", "d2", "d3" ],
+				"30" : [ "e1", "e2", "e3" ]
+				},
+			"07" : {
+				"06" : "v4",
+				"07" : [ "f1", "f2", "f3" ],
+				"08" : [ "g1", "g2", "g3" ]
+				}
+			},
+		"2017" : {
+			"11" : {
+				"01" : "v3",
+				"05" : [ "h1", "h2", "h3" ],
+				"09" : [ "i1", "i2", "i3" ]
+				},
+			"12" : {
+				"11" : "v4",
+				"15" : [ "j1", "j2", "j3" ],
+				"31" : [ "k1", "k2", "k3" ]
+				}
+			}
+		}
+	}
+
+
+Some queries on these data
+
+all /2000
+
+	{ "db" : "DB1", "key" : "2000" }
+
+From 2017/12/21 only the values k1,k2
+
+	{
+	"db"        : "DB1",
+	"key"       : "/",
+	"max_level" : 5,
+	"filter"    : [
+	  { "level":"1", "applied_on":"keys"  , "condition":"(? == '2017')"   },
+	  { "level":"2", "applied_on":"keys"  , "condition":"(? == '12')"     },
+	  { "level":"3", "applied_on":"keys"  , "condition":"(? == '31')"     }, 
+	  { "level":"3", "applied_on":"values", "condition":"(? =~ /k(1|2)/)" } 
+	  ]
+	}
+
+filtering at years and months
+
+	{
+	"db"        : "DB1",
+	"key"       : "/",
+	"max_level" : 5,
+	"filter"    : [
+	{"level":"1", "applied_on":"keys",  "condition": "(? == '2012') or (? > '2014')" },
+	{"level":"2", "applied_on":"keys",  "condition": "(? > '08')" },
+	{"level":"3", "applied_on":"keys",  "condition": "(? >= '12')"},
+	{"level":"3", "applied_on":"values","condition": "(? =~ /^k/ )"}  ]
+	}

@@ -1,4 +1,30 @@
 {
+"db"    : "DB1",
+"append": false,
+"data"  : {
+  "192" : {
+    "168": {
+       "0": {
+        "34":{
+          "host"  : "srv34",
+          "status": "up",
+          "role"  : [ "http", "ftp", "db", "file", "mail" ]
+          }
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+{
 "db"     : "DB1",
 "append" : false,
 "data"   : {

@@ -2,7 +2,7 @@
 Description=ShellDB mount loopback devices
 Documentation=https://www.linux.org
 After=network.target
-Before=shelldb.service local-fs.target
+Before=shelldb.service
 PartOf=shelldb.service
 
 [Service]
@@ -17,4 +17,4 @@ StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=multi-user.target local-fs.target
+WantedBy=multi-user.target

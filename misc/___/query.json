@@ -1,11 +1,13 @@
+
 {
-"db"     : "DB1",
-"key"    : "192/168/0/34",
-"filter" : [ 
-             { 
-             "level"      : "1",
-             "applied_on" : "values",
-             "condition"  : "(? eq 'http') or (? =~/^f/i )"
-             }
-           ]
+"db"        : "DB1",
+"key"       : "/",
+"max_level" : 5,
+"filter"    : [
+{"level":"1", "applied_on":"keys",  "condition": "(? == '2012') or (? > '2014')" },
+{"level":"2", "applied_on":"keys",  "condition": "(? > '08')" },
+{"level":"3", "applied_on":"keys",  "condition": "(? >= '12')"},
+{"level":"3", "applied_on":"values","condition": "(? =~ /^k/ )"}  ]
 }
+
+
