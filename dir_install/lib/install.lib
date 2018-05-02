@@ -105,20 +105,23 @@ exit 184
 
 # Create and directory and give it to ${opt[user]}:${opt[group]}
 function CreateDir() {
-if [ ! -d $1 ]; then
-echo Create directory : $1
-	if ${opt[mkdir]} -p $1 2>/dev/null; then
-		if ! ${opt[chown]} -R ${opt[user]}:${opt[group]} $1 2>/dev/null; then
-		echo Could not give directory $1 to ${opt[user]}:${opt[group]} because $?
-		exit 185
+
+	if [ ! -d $1 ]; then
+	echo Create directory : $1
+
+		if ! ${opt[mkdir]} -p $1 2>/dev/null; then
+		echo Could not create directory $1 because $?
+		exit 186
 		fi
+
 	else
-	echo Could not create directory $1 because $?
-	exit 186
+	echo Directory already exists : $1
 	fi
-else
-echo Directory already exists : $1
-fi    
+
+	if ! ${opt[chown]} -R ${opt[user]}:${opt[group]} $1 2>/dev/null; then
+	echo Could not give directory $1 to ${opt[user]}:${opt[group]} because $?
+	exit 185
+	fi
 }
 
 
