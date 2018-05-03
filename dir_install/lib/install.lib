@@ -260,7 +260,7 @@ function Install() {
 
 # Create directories
 
-	for i in ${opt[installdir]}/bin ${opt[installdir]}/lib ${opt[installdir]}/documentation ${opt[datadir]} ${opt[logdir]}; do
+	for i in ${opt[installdir]}/bin/run/upload ${opt[installdir]}/lib ${opt[installdir]}/documentation ${opt[datadir]} ${opt[logdir]}; do
 	CreateDir $i
 	done
 
@@ -300,14 +300,14 @@ function Install() {
 
 # Copy application files
 
-	echo Copy application files at ${opt[installdir]}
+	echo Copy system and application files at ${opt[installdir]}
+	${opt[cp]} --force --archive ${opt[scriptdir]}/dir_root/*      /
 	${opt[cp]} --force --archive ${opt[scriptdir]}/dir_install/*   ${opt[installdir]}
 	${opt[cp]} --force --archive ${opt[scriptdir]}/documentation/* ${opt[installdir]}/documentation
 	${opt[find]} ${opt[scriptdir]} -maxdepth 1 -type f -exec ${opt[cp]} --force --archive {} ${opt[installdir]} \;
-	${opt[chown]} -R ${opt[user]}:${opt[group]} ${opt[installdir]}
 
-	echo Copy operating system files
-	${opt[cp]} --force --archive ${opt[scriptdir]}/dir_root/* /
+	${opt[chown]} -R ${opt[user]}:${opt[group]} ${opt[installdir]}
+	${opt[chown]} -R root:root /etc/sudoers.d
 
 # The copied files probably have wrong paths because user distribution is probably
 # different than the one this is installer was created but we can fixit !
