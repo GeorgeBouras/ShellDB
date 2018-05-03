@@ -308,6 +308,7 @@ function Install() {
 
 	${opt[chown]} -R ${opt[user]}:${opt[group]} ${opt[installdir]}
 	${opt[chown]} -R root:root /etc/sudoers.d
+	${opt[chown]} -R root:root /etc/systemd/system
 
 # The copied files probably have wrong paths because user distribution is probably
 # different than the one this is installer was created but we can fixit !
