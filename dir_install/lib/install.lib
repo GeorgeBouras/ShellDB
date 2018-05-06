@@ -1,9 +1,7 @@
 # Functions used from the ShellDB installation utility
 #
-# George Bouras
-# george.mpouras@yandex.com
-# 26 Apr 2018
-# Greece, Athens
+# George Bouras, george.mpouras@yandex.com
+# Greece, Athens, 26 Apr 2018
 
 
 function Help() {
@@ -349,11 +347,10 @@ Log files are at ${opt[logdir]}/
 
 If you are using firewall do not forget to
 allow the tcp port ${opt[port]}
-
 Quick test
 
-	curl localhost:7000/info/about
-	curl localhost:7000/info/license
+	curl 0:7000/info/about
+	curl 0:7000/info/license
 
 EOF
 }
