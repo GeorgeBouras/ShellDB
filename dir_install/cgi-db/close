@@ -42,5 +42,5 @@ next unless dbadmin::IsItMounted("$datadir/$db/data");
 push @{$output->{database}}, $db
 }
 closedir DIR;
-@{$output}{'error_code','error_message'}=(272,'No matching database') unless $found;
+$output->{'error_message'}='No matching database' unless $found;
 &Exit

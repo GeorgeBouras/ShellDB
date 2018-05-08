@@ -1,9 +1,12 @@
 #!/bin/bash
-# Install/Uninstall utility for ShellDB
+# ShellDB installer
 #
 # George Bouras, george.mpouras@yandex.com
-# 23 Apr 2018
+# 8 May 2018
 # Greece, Athens
+
+# Check if have root powers
+if [ 0 -ne $(id -u) ]; then echo -e Sorry $(id -un)\\n\\nOnly root can run this command.\\nTry again using sudo:\\n\\n\\tsudo $0 $@\\n; exit; fi
 
 declare -A opt
 opt[scriptdir]="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -22,7 +25,6 @@ fi
 
 # Read configuration
 SetOptions
-#for key in "${!opt[@]}"; do echo "$key -> ${opt[$key]}"; done; exit # our options 
 
 if [ -z $1 ];                             then Ambiguous   ; exit 161; fi
 if echo $1 | grep -iE "^-*v" > /dev/null; then Version     ; exit 0  ; fi

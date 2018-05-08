@@ -127,7 +127,7 @@ function SetOptions() {
 
 # Find the utilities we are going to use
 
-	for i in systemctl journalctl btrfs mkfs.btrfs modprobe lsmod make gcc perl cut getent grep sed groupadd nologin useradd losetup findmnt df find sudo mount umount chown mkdir mv cp rm id tar userdel groupdel;
+	for i in systemctl journalctl btrfs mkfs modprobe lsmod make gcc perl cut getent grep sed groupadd nologin useradd losetup findmnt df find sudo mount umount chown mkdir mv cp rm tar userdel groupdel;
 	do
 	opt[$i]=$(LocateFileAtPath $i)
 	if [ $? -ne 0 ]; then echo -e "Sorry could not found utility \"$i\" at your \$PATH\nInstall the corresponded package and try again"; exit 187 ; fi
@@ -153,6 +153,8 @@ function SetOptions() {
 			exit 188
 		fi
 	fi
+
+#for key in "${!opt[@]}"; do echo "$key -> ${opt[$key]}"; done; exit # our options 
 }
 
 
@@ -190,6 +192,14 @@ hash['/opt/shelldb']=${opt[installdir]}
 hash['/var/log/shelldb']=${opt[logdir]}
 hash['/var/lib/shelldb']=${opt[datadir]}
 hash['/usr/bin/perl']=${opt[perl]}
+hash['/usr/sbin/losetup']=${opt[losetup]}
+hash['/usr/bin/mount']=${opt[mount]}
+hash['/usr/bin/umount']=${opt[umount]}
+hash['/usr/sbin/btrfs']=${opt[btrfs]}
+hash['/usr/sbin/mkfs']=${opt[mkfs]}
+hash['/usr/bin/chown']=${opt[chown]}
+
+# for key in "${!hash[@]}"; do echo "$key -> ${hash[$key]}"; done; exit
 
 	for key in "${!hash[@]}"; do
 	sed -r -i "s|$key|${hash[$key]}|g" $1
@@ -205,13 +215,6 @@ function Install() {
 	if [ -f /etc/systemd/system/shelldb.service ]; then
 	echo ShellDB is already installed
 	exit 189
-	fi
-
-# Check if we have root powers
-
-	if [ 0 -ne $(${opt[id]} -u) ]; then
-	echo Sorry $(${opt[id]} -un) , only root can run this utility.
-	exit 190
 	fi
 
 # Check if some important directories exists
@@ -231,10 +234,10 @@ function Install() {
 	else
 	echo -e "\\nPerl module JSON is missing\\nyou can install it either from CPAN"
 	echo -e "\\n\thttps://metacpan.org/pod/JSON\\n\thttps://metacpan.org/pod/JSON::XS"
-	echo -e "\\nor you could use the package of your linux distribution\\ne.g. at RedHat/Centos you can\\n\\n\tyum install perl-JSON\\n\tyum install perl-JSON-PP\\n"
+	echo -e "\\nor you could use the package of your linux distributione.g\\nat RedHat/Centos you can\\n\\n\tyum install perl-JSON\\n\tyum install perl-JSON-PP\\n\\nAt ubuntu you can install\\n\\n\\tapt install libjson-xs-perl\\n\\tapt install libjson-perl\\n\\n"
 	exit 192
 	fi
-	
+
 # Stop shelldb
 
 	echo Stop ShellDB
@@ -327,6 +330,7 @@ function Install() {
 	Replace_strings ${opt[installdir]}/cgi-sql/rename
 	Replace_strings /etc/systemd/system/shelldb.service
 	Replace_strings /etc/systemd/system/shelldb-mount.service
+	Replace_strings /etc/sudoers.d/shelldb
 
 # Start ShellDB
 
@@ -376,11 +380,6 @@ function Uninstall() {
 	fi
 
 # Check if we have root powers
-
-	if [ 0 -ne $(${opt[id]} -u) ]; then
-	echo Sorry $(${opt[id]} -un) , only root can run this utility.
-	exit 171
-	fi
 
 echo Stop
 

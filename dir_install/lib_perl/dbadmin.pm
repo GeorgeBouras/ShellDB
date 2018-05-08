@@ -18,7 +18,7 @@ my $group	= 'shelldb';
 my $sudo	= '/usr/bin/sudo';
 my $losetup = '/usr/sbin/losetup';
 my $btrfs	= '/usr/sbin/btrfs';
-my $format	= '/usr/sbin/mkfs.btrfs';
+my $mkfs	= '/usr/sbin/mkfs';
 my $findmnt	= '/usr/bin/findmnt';
 my $mount	= '/usr/bin/mount';
 my $umount	= '/usr/bin/umount';
@@ -217,7 +217,7 @@ sub Create_volume
 my ($dir,$dev)=@_;
 my ($db) = $dir =~/([^\\\/]+)$/;
 
-	if ( system "$sudo $format -f -L $db --nodesize 4096 -d single -m single $dev 1> /dev/null 2>&1" ) {
+	if ( system "$sudo $mkfs --type=btrfs -f -L $db --nodesize 4096 -d single -m single $dev 1> /dev/null 2>&1" ) {
 	return 113, "At database $db could not format loopback device $dev as btrfs , shell error $?"
 	}
 

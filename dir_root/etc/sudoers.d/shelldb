@@ -2,5 +2,5 @@ shelldb ALL=(ALL:ALL) NOPASSWD: /usr/sbin/losetup
 shelldb ALL=(ALL:ALL) NOPASSWD: /usr/bin/mount
 shelldb ALL=(ALL:ALL) NOPASSWD: /usr/bin/umount
 shelldb ALL=(ALL:ALL) NOPASSWD: /usr/sbin/btrfs
-shelldb ALL=(ALL:ALL) NOPASSWD: /usr/sbin/mkfs.btrfs
+shelldb ALL=(ALL:ALL) NOPASSWD: /usr/sbin/mkfs
 shelldb ALL=(ALL:ALL) NOPASSWD: /usr/bin/chown
