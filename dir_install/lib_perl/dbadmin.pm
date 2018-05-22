@@ -195,7 +195,7 @@ my $subvolume = $dir=~/\/data$/ ? '__DATA' : '__SNAPSHOTS';
 	unless ( IsItMounted($dir) ) {
 	mkdir $dir or return(110, "Could not create directory $dir because $!") unless -d $dir;
 
-		if ( system "$sudo $mount -t btrfs -o defaults,autodefrag,space_cache=v2,compress-force=lzo,subvol=$subvolume $dev \"$dir\"" ) {
+		if ( system "$sudo $mount -t btrfs -o defaults,autodefrag,compress-force=lzo,subvol=$subvolume $dev \"$dir\"" ) {
 		return 111, "Could not mount subvolume $subvolume of device $dev at $dir because $?"
 		}
 
@@ -242,8 +242,6 @@ my ($db) = $dir =~/([^\\\/]+)$/;
 
 0,'success'
 }
-
-
 
 
 
