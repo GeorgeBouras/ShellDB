@@ -31,6 +31,12 @@ The install, uninstall procedure is dead simple
 	./install -–about
 	./install -–license
 
+To upgrade ( the data are not affected)
+
+	git pull origin master
+	./install -–remove
+	./install --install
+
 That is all you need to know to have ShellDB started. So get the code, install it, read the short API documentation and have some fun with it.
 
 <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/01%20generic.txt">Generic</a>
