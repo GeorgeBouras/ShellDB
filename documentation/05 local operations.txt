@@ -15,7 +15,6 @@ Info
 	echo '{}' | perl /opt/shelldb/cgi-info/license
 	echo '{}' | perl /opt/shelldb/cgi-info/enviroment
 
-
 Database management
 
 	echo '{"db": "DB?" }'                  | perl /opt/shelldb/cgi-db/list
@@ -28,8 +27,7 @@ Database management
 	echo '{"db": "DB*" }'                  | perl /opt/shelldb/cgi-db/vacuum
 	echo '{"db":"DB1","size":"249715200"}' | perl /opt/shelldb/cgi-db/expand
 
-
-Data management
+Qeuries
 
 	jq -c . insert.json | /perl /opt/shelldb/cgi-sql/insert
 	jq -c . query.json  | /perl /opt/shelldb/cgi-sql/query

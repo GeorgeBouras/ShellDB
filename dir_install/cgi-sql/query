@@ -1,85 +1,141 @@
 #!/usr/bin/perl
-# Query the database
-# Example of POST request (json)
-#
-#    {
-#    "db"        : "SomeDB",				# Obligatory
-#    "key"       : "/",						# Obligatory
-#    "max_level" : 2,						# Optional
-#    "filter"    : [						# Filters
-#         { 
-#         "level"      : "1",
-#         "applied_on" : "keys",
-#         "condition"  : "? < '2002'"
-#         }
-#      ]
-#    }
+# Query
 #
 # George Bouras
 # george.mpouras@yandex.com
+
 
 use strict;
 use warnings;
 use lib '/opt/shelldb/lib_perl';
 use shelldb;
+
 use feature qw/say/;
 
+
 exists $input->{$_} || Exit(5, "key '$_' is missing from your input") foreach qw/db key/;
-$input->{key}		=~s/^\/*(.*?)\/*$/$1/;
-$input->{max_level} = exists $input->{max_level} ? $input->{max_level} : 2000;
-$output->{data}		= {};
-Exit(6, "The database $input->{db} does not exist") unless -d "$datadir/$input->{db}/data";
-Exit(7, "Key does not exist")                       unless -d "$datadir/$input->{db}/data/$input->{key}";
-Exit(8, "Key max_level should be an integer")       unless $input->{max_level} =~/^\d+$/;
+$input->{key}				=~s/^\/*(.*?)\/*$/$1/;
+$input->{max_level}			//= 2000;
+$input->{allow_empty_keys}	= exists $input->{allow_empty_keys}	? $input->{allow_empty_keys}=~/^(t|1)/i ?1:0:0;
+$output->{data}				= {};
+Exit(6, "The database $input->{db} does not exist")	unless -d "$datadir/$input->{db}/data";
+Exit(7, 'key does not exist')						unless -d "$datadir/$input->{db}/data/$input->{key}";
+Exit(8, 'max_level should be an integer')			unless $input->{max_level} =~/^\d+$/;
 
+
+my $filter	= {key=>{}, val=>{}};
 my $level	= 0;
-my $skip	= 0;
-my $filter	= {key=>{}, value=>{}};
-my $record;
-
+my @data;
+my $key;
+my $type;
+my $rec;
 
 
 # Parse and compile the filters
 if (exists $input->{filter}) {
 $input->{filter} = [ $input->{filter} ] if 'HASH' eq ref $input->{filter};
-Exit(9, "filter key is not a json of closures or just a single closure") unless 'ARRAY' eq ref $input->{filter};
+Exit(9, 'filter key is not a json of closures or just a single closure') unless 'ARRAY' eq ref $input->{filter};
+my $i=1;
 
-	foreach (my $i=0; $i<@{$input->{filter}}; $i++) {
-	exists $input->{filter}->[$i]->{$_} || Exit(10, 'filter '.($i+1)." is missing the key $_") foreach qw/level condition applied_on/;
-	Exit(11, 'level of filter '.($i+1)." is not an integer") unless $input->{filter}->[$i]->{level} =~/^\d+$/;
-	my $type;
+	my $parsefilter = sub { #use Data::Dumper; print Dumper $_[0]; exit;
+	(my $code = $_[0]->{condition}) =~s/\?/\$_[0]/gm;
+	$code = eval "sub{$code?1:0}";
+	Exit(13, "Could not understand the $type filter $i condition $_[0]->{condition} , possible syntax error") if $@;
+	my $F;
 
-		if    ( $input->{filter}->[$i]->{applied_on}=~/(?i)^k/ ) { $type='key'   }
-		elsif ( $input->{filter}->[$i]->{applied_on}=~/(?i)^v/ ) { $type='value' }
-		else  { Exit(12, 'applied_on at filter '.($i+1)." of level evel $input->{filter}->[$i]->{level} should be keys or values") }
+		if (exists $_[0]->{condition_at_fields}) {
 
-	$input->{filter}->[$i]->{condition} =~s/\?/\$_[0]/gm;
+			if ('ARRAY' eq ref $_[0]->{condition_at_fields}) {
+			$F->{$_} = undef for @{$_[0]->{condition_at_fields}}
+			}
+			else {
+			$F->{ $_[0]->{condition_at_fields} } = undef
+			}
+		}
+		else {
+		$F = 'all'
+		}
 
-	#push @{$filter->{$type}->{$input->{filter}->[$i]->{level}}} ,  "sub{ $input->{filter}->[$i]->{condition} ? 1:0 }";
-	my $code = eval "sub{$input->{filter}->[$i]->{condition} ? 1:0}";
-	Exit(13, "Could not understand the $input->{filter}->[$i]->{level} level , $type filter condition $input->{filter}->[$i]->{condition} , possible syntax error") if $@;
-	push @{$filter->{$type}->{ $input->{filter}->[$i]->{level} }}, $code
+	{condition_at_fields=>$F, code=>$code}
+	};
+	
+	foreach my $f (@{$input->{filter}}) {
+	exists $f->{$_} || Exit(10,"filter $i is missing the key $_") foreach qw/type condition/;
+	$type = $f->{type}=~/(?i)^k/ ? 'key' : $f->{type}=~/(?i)^v/ ? 'val' : Exit(12, "filter $i type $f->{type} should be keys or values");
+
+		if (exists $f->{level}) {
+		$f->{level} = [ $f->{level} ] unless 'ARRAY' eq ref $f->{level};
+
+			foreach my $level (@{$f->{level}}) {
+			Exit(12,"filter $i level $level should be an interger") if $level !~/^\d+$/;			
+			push @{$filter->{$type}->{$level}}, $parsefilter->($f)
+			}
+		}
+		else {
+		push @{$filter->{$type}->{all}}, $parsefilter->($f)
+		}
+
+	$i++
 	}
 }
 
-#use Data::Dumper; print Dumper $filter; exit;
+
+
+foreach (qw/key val/) {
+	unless ( %{$filter->{$_}} ) {
+	delete $filter->{$_}
+	}
+}
 
 delete $input->{filter};
+
+
+	
+
+
+
+
+#use Data::Dumper; print Dumper $filter; exit;
+#use Data::Dumper; print Dumper $input; exit;
+
 chdir "$datadir/$input->{db}/data/$input->{key}";
 recursive_dir('.');
-
-
 &Exit;
 
 
 
+	###############
+	#             #
+	#  Functions  #
+	#             #
+	###############
 
 
-		###############
-		#             #
-		#  Functions  #
-		#             #
-		###############
+
+
+sub Filter_key
+{
+	if (exists $filter->{key}->{$level}) {
+
+		foreach (@{$filter->{key}->{$level}}) {
+		return 0 unless $_->{code}->($_[0])
+		}
+	}
+
+	if (exists $filter->{key}->{all}) {
+
+		foreach (@{$filter->{key}->{all}}) {
+		return 0 unless $_->{code}->($_[0])
+		}
+	}
+1
+}
+
+
+
+
+
+
 
 
 
@@ -88,72 +144,102 @@ sub recursive_dir
 {
 opendir my $dh, $_[0] or Exit(20,"Could not read directory $_[0] the error is $!");
 
-	foreach my $key (grep ! /^\.+$/, readdir $dh)
+
+	foreach $key (grep ! /^\.+$/, readdir $dh)
 	{
-	my $fullpath = "$_[0]/$key";
-	
-	 	if (-d $fullpath)
-		{
+	my $fullpath="$_[0]/$key";
+
+		# dir
+	 	if (-d $fullpath) {
 		$level++;
-		$skip=0;
 
-			if (exists $filter->{key}->{$level}) {
-				foreach (@{$filter->{key}->{$level}}) {
-					unless ($_->($key)) {
-					$skip=1;
-					last
-					}
+			if ( Filter_key($key) ) {
+			#print "type=key, level=$level, key=$key, fullpath=$fullpath, Filter=",Filter_key($key),"\n";
+
+				if ($input->{allow_empty_keys}) {
+				my @path = split /\//, $fullpath; shift @path;
+				HashKeySet($output->{data}, [@path])
 				}
-			}
 
-			unless ($skip) {
-			#print "$level key : $fullpath\n";
-			my @path = split /\//, $fullpath; shift @path;
-			HashKeySet($output->{data}, [@path]);
 			recursive_dir($fullpath) if $input->{max_level} > $level
 			}
 
 		$level--
 		}
-		else
-		{
-		#print "$level val : $fullpath\n";
+
+		# file
+		else {
+		next if $key ne '___';
 		my @path = split /\//, $_[0]; shift @path;
-		my @data;
-		open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+		$key=$path[-1];
+		@data=();
 
-			while($record=<FILE>) {
-			next if $record=~/^\s*$/;
-			$record=~s/^\s*(.*?)\s*$/$1/;
-			$skip=0;
+			if (exists $filter->{val}) {
+			
+				if (exists $filter->{val}->{$level}) {
+					foreach (@{$filter->{val}->{$level}}) {
+	
+						if ( ($_->{condition_at_fields} eq 'all') || (exists $_->{condition_at_fields}->{$key}) ) {
+						#print "type=val, level=$level, key=$key, fullpath=$fullpath\n";
+						open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+							while($rec=<FILE>) {
+							next if $rec=~/^\s*$/;
+							$rec=~s/^\s*(.*?)\s*$/$1/;
+							push @data, $rec if $_->{code}->($rec)
+							}
+						close FILE
+						}
+					}	
+				}
 
-				if (exists $filter->{value}->{$level}) {
-					foreach (@{$filter->{value}->{$level}}) {
-						unless ($_->($record)) {
-						$skip=1;
-						last
+				if (exists $filter->{val}->{all}) {
+					foreach (@{$filter->{val}->{all}}) {
+
+						if ( ($_->{condition_at_fields} eq 'all') || (exists $_->{condition_at_fields}->{$key}) ) {
+						#print "type=val, level=$level, key=$key, fullpath=$fullpath\n";
+						open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+							while($rec=<FILE>) {
+							next if $rec=~/^\s*$/;
+							$rec=~s/^\s*(.*?)\s*$/$1/;
+							push @data, $rec if $_->{code}->($rec)
+							}
+						close FILE
 						}
 					}
 				}
-
-			push(@data, $record) unless $skip
+			}
+			else {
+			open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+			while($rec=<FILE>) { next if $rec=~/^\s*$/; $rec=~s/^\s*(.*?)\s*$/$1/; push @data, $rec }
+			close FILE			
 			}
 
-		close FILE;
 
 			if (@data) {
+
 				if (@data > 1) {
 				HashKeySet($output->{data}, [@path], [@data] )
 				}
-				else {			
+				else {
 				HashKeySet($output->{data}, [@path], $data[0] )
 				}
+
+			$output->{count}->{"level $level"}->{$key} += scalar @data
 			}
 		}
 	}
 
 closedir $dh
 }
+
+
+
+
+
+
+
+
+
 
 
 

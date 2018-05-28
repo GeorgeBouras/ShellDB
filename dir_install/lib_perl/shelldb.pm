@@ -6,7 +6,7 @@
 package shelldb;
 use		JSON;
 require Exporter;
-our	$VERSION = '1.2.0';
+our	$VERSION = '1.2.2';
 our	@ISA	 = qw/Exporter/;
 our	@EXPORT	 = qw/$datadir $input $output &Exit/;
 our $datadir = '/var/lib/shelldb';
@@ -29,7 +29,7 @@ foreach (split /&|;/, $ENV{QUERY_STRING}) {
 
 # Check if the POSTed data are valid JSON 
 if ('GET' ne $ENV{REQUEST_METHOD}) {
-$/ = undef;
+local $/ = undef;
 eval {$input = $json->decode(readline STDIN)};
 if ($@) {chop $@; Exit(2,$@)}
 }

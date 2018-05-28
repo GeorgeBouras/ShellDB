@@ -34,3 +34,5 @@ test urls can be written as
 	curl -X GET http://localhost:7000/info/enviroment?canonical=true
 
 These swithes can be used an all REST calls
+
+You can use also the postman browser extension or SoapUI as rest client if your prefer
