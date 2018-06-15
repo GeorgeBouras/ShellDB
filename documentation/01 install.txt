@@ -1,0 +1,47 @@
+The install/uninstall procedure is automated
+You can change installation properties if you edit the file
+
+	ShellDB/dir_install/config/shelldb.cfg
+
+Get the code, view the License and version
+
+	git clone https://github.com/GeorgeBouras/ShellDB.git
+	cd ShellDB
+	./install --version
+	./install --help
+	./install -–about
+	./install -–license
+
+Install
+
+	./install --install
+
+Firewall e.g. at RedHat/CentOS
+
+	firewall-cmd --zone=public --permanent --add-port=7000/tcp
+	firewall-cmd --reload
+
+Quick test
+
+	curl localhost:7000/info/about
+	curl localhost:7000/info/license
+
+Uninstall
+
+	./install -–remove
+	./install --remove purge	( remove also the DBs )
+
+	firewall-cmd --zone=public --permanent --remove-port=7000/tcp
+
+Upgrade, do not affect your data
+
+	cd ShellDB
+	git pull origin master
+	./install -–remove
+	./install --install
+
+To stop, start the embedded web server and mount your databases
+
+	systemctl (start|stop|status) shelldb
+
+That is all you need to know to have ShellDB started.

@@ -1,7 +1,7 @@
 # Functions used from the ShellDB installation utility
 #
 # George Bouras, george.mpouras@yandex.com
-# Greece, Athens, 26 Apr 2018
+# Greece, Athens, 15 June 2018
 
 
 function Help() {
@@ -353,8 +353,8 @@ If you are using firewall do not forget to
 allow the tcp port ${opt[port]}
 Quick test
 
-	curl 0:7000/info/about
-	curl 0:7000/info/license
+	curl localhost:7000/info/about
+	curl localhost:7000/info/license
 
 EOF
 }

@@ -6,10 +6,10 @@ use FindBin;
 use lib "$FindBin::Bin/../lib_perl";
 use shelldb;
 
-$output->{os}				= eval{ local $_ = undef; local $/ = undef; open __F, -f '/etc/redhat-release' ? '/etc/redhat-release' : '/etc/issue'; if (fileno __F) { ($_= <__F>)=~s/\s*$//s; $_ = join ' ', split /\v/, $_ } close __F; $_ // $^O };
-$output->{version}			= $shelldb::VERSION;
-$output->{'uptime ShellDB'}	= scalar localtime &uptime_shelldb;
-$output->{'uptime server'}	= scalar localtime &uptime_os;
+$output->{os}			= eval{ local $_ = undef; local $/ = undef; open __F, -f '/etc/redhat-release' ? '/etc/redhat-release' : '/etc/issue'; if (fileno __F) { ($_= <__F>)=~s/\s*$//s; $_ = join ' ', split /\v/, $_ } close __F; $_ // $^O };
+$output->{version}		= $shelldb::VERSION;
+$output->{'started'}	= scalar localtime &uptime_shelldb;
+$output->{'http server'}= qx|$FindBin::Bin/../bin/lighttpd -v|; chomp $output->{'http server'};
 
 open FILE, '<', "$FindBin::Bin/../config/shelldb.cfg" or Exit(30, "Could not read configuration file because $!");
 
@@ -22,12 +22,9 @@ open FILE, '<', "$FindBin::Bin/../config/shelldb.cfg" or Exit(30, "Could not rea
 
 close FILE;
 
-
 &Exit;
 
-
-sub uptime_shelldb
-{
+sub uptime_shelldb {
 my $pid = -1;
 
 	if (-f "$FindBin::Bin/../bin/run/shelldb.pid") {
@@ -37,14 +34,5 @@ my $pid = -1;
 	chomp $pid
 	}
 
--d "/proc/$pid" ? [stat "/proc/$pid"]->[10] : &uptime_os
-}
-
-
-sub uptime_os
-{
-	if    (-d '/proc/0')	{ [stat '/proc/0']->[10] }
-	elsif (-d '/proc/1')	{ [stat '/proc/1']->[10] }
-	elsif (-d '/proc/2')	{ [stat '/proc/2']->[10] }
-	else					{ $^T }
+-d "/proc/$pid" ? [stat "/proc/$pid"]->[10] : $^T
 }

@@ -13,41 +13,21 @@ Why ShellDB is fast.
 The data structures are stored inside the Btrfs volumes as common files and directories.  The directories are used to store the key names while the files are storing their values.
 Except from the embedded web server, there is no other process running to slow down your server or to consume your server memory. Also it is almost impossible to corrupt a database because there are not any index files.
 
-The insert,query,delete etc requests, are performed from very small and fast shell scripts, so that’s where ShellDB name is came from. For the time being only linux is supported.
+The insert,query,delete etc requests, are performed from very small and fast shell scripts, so that’s where ShellDB name is came from. For the time being only Linux is supported.
 
-To stop, start the embedded web server and mount your databases use
+So get the code, install it, read the short API documentation and have some fun with it.
 
-	systemctl (start|stop|status) shelldb
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/01%20install.txt">Installation Instructions</a>
 
-The install, uninstall procedure is dead simple
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/02%20generic.txt">Generic</a>
 
-	git clone https://github.com/GeorgeBouras/ShellDB.git
-	cd ShellDB
-	./install --install
-	./install -–remove
-	./install --remove purge	( remove also the DBs )
-	./install --version
-	./install --help
-	./install -–about
-	./install -–license
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/03%20manage%20databases.txt">Manage databases</a>
 
-To upgrade ( the data are not affected)
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/04%20insert%2C%20update%2C%20delete%20data.txt">Insert, Update, Delete, Rename, Check data</a>
 
-	git pull origin master
-	./install -–remove
-	./install --install
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/05%20query.txt">Reporting</a>
 
-That is all you need to know to have ShellDB started. So get the code, install it, read the short API documentation and have some fun with it.
-
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/01%20generic.txt">Generic</a>
-
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/02%20manage%20databases.txt">Manage databases</a>
-
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/03%20insert%2C%20update%2C%20delete%20data.txt">Insert, Update, Delete, Rename, Check data</a>
-
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/04%20query.txt">Reporting</a>
-
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/05%20local%20operations.txt">Local operations</a>
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/06%20local%20operations.txt">Local operations</a>
 
 George Bouras
 georgios.mpouras@gmail.com

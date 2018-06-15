@@ -4,7 +4,7 @@ Info operations are available at path /db
 The following methods are available
 
 	localhost:7000/info/about
-	localhost:7000/info/license	
+	localhost:7000/info/license
 	localhost:7000/info/enviroment
 
 You have to open the tcp port 7000 at your firewall for remote access
@@ -26,8 +26,7 @@ At the reply there are the keys
 If there is problem during the operation the error_code is not 0 and
 the error_message contains the actuall error that you should correct.
 
-So if we using the curl command line utility as client the
-test urls can be written as
+So if we using the curl as client
 
 	curl -X GET http://localhost:7000/info/about?pretty=true
 	curl -X GET http://localhost:7000/info/license?pretty=false
