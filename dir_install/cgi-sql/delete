@@ -18,27 +18,29 @@ use shelldb;
 my $find='/usr/bin/find';
 my $rm='/usr/bin/rm';
 
+
 exists $input->{$_} || Exit(30, "key $_ is missing from your input") foreach qw/db key/;
-$input->{key} =~s/^\/*(.*?)\/*$/$1/;
+-d "$datadir/$input->{db}/data"	|| Exit(31, "The database $input->{db} do not exist");
+$input->{key}=~s/^\/*(.*?)\/*$/$1/;
+my $type = -d "$datadir/$input->{db}/data/$input->{key}" ? 'd' : -f "$datadir/$input->{db}/data/$input->{key}" ? 'f' : Exit 32,"The Key $input->{key} do not exist";
 
-Exit(31, "The database $input->{db} do not exist")	unless -d "$datadir/$input->{db}/data";
-Exit(32, "The Key $input->{key} do not exist")		unless -d "$datadir/$input->{db}/data/$input->{key}";
-
-
-if (exists $input->{check_data} ? $input->{check_data}=~/(?i)true|y|1/ ? 1:0 : 1) {
+if ((exists $input->{check_data} ? $input->{check_data}=~/(?i)true|y|1/ ? 1:0 : 1) && ($type eq 'd')) {
 opendir DIR, "$datadir/$input->{db}/data/$input->{key}";
 	while (readdir DIR) {
 	next if /^\.\.?$/;
-		if (-d "$datadir/$input->{db}/data/$input->{key}/$_") {
-		closedir DIR;
-		Exit(33, "Can not delete the key $input->{key} because it holds sub-keys. Try again with check_data:false")
-		}
+	if (-d "$datadir/$input->{db}/data/$input->{key}/$_") { closedir DIR; Exit 33,"Can not delete the key $input->{key} because it holds sub-keys. Try again with check_data:false" }
 	}
 closedir DIR
 }
 
 
-# Rename the key to prohibit insertions during the key deletion
-rename "$datadir/$input->{db}/data/$input->{key}", "$datadir/$input->{db}/data/$input->{key}.__delete__" or Exit(34, "Could not mark for deletion because $!");
-system "$find \"$datadir/$input->{db}/data/$input->{key}.__delete__\" -depth -exec $rm -rf {} \\; 1> /dev/null 2>&1 &";
+if ($type eq 'f') {
+unlink "$datadir/$input->{db}/data/$input->{key}" or Exit 34,"Could not delete key because $!"
+}
+else {
+# Rename the directory key to prohibit insertions during deletion
+rename "$datadir/$input->{db}/data/$input->{key}", "$datadir/$input->{db}/data/$input->{key}.DELETE__" or Exit 35, "Could not mark for deletion because $!";
+system "$find \"$datadir/$input->{db}/data/$input->{key}.DELETE__\" -depth -exec $rm -rf {} \\; 1> /dev/null 2>&1 &"
+}
+
 Exit

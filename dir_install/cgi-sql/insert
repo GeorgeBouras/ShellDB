@@ -1,10 +1,9 @@
 #!/usr/bin/perl
-# insert/update records at the selected database
-# Example of POST request (json)
+# insert/update records. POST Example
 # 
 #	{
 #	"db"	: "DB1",			The selected database
-#	"append": false,			true/false . false if missing
+#	"append": false,			true/false false if missing
 #	"data"	: { "k1" : "v2" }	data to store (as json)
 #	}
 #
@@ -17,62 +16,18 @@ use lib '/opt/shelldb/lib_perl';
 use shelldb;
 
 exists $input->{$_} || Exit(2, "key $_ is missing from your input") foreach qw/db data/;
-Exit(13, "The database $input->{db} does not exist") unless -d "$datadir/$input->{db}/data";
+-d "$datadir/$input->{db}/data" || Exit(13, "The database $input->{db} does not exist");
 
-my $id		= "___.$^T.$$";
+
 my $append	= exists $input->{append} ? $input->{append}=~/(?i)true|y/ ? 1:0:0;
-my $mode;
-
-Walker( $input->{data} );
-Exit;
-
-
-
-sub Walker {
-my $data=shift;
-if		('SCALAR'	eq ref $data) { Walker(${$data},    @_) }
-elsif	('ARRAY'	eq ref $data) { Walker($_,          @_)		for @{$data} }
-elsif	('HASH'		eq ref $data) {	Walker($data->{$_}, @_, $_)	for sort keys %$data }
-
-	else {
-	$data=~s/\s*$//;
-	my $dir = join '/', "$datadir/$input->{db}/data", @_;
-	Create_nested_directory($dir) or Exit(14, "Could not create dir $dir because $!");
-
-		if ($append) {
-		$mode = '>>:utf8'
-		}
-		else {
-
-			if (-f "$dir/$id") {
-			$mode = '>>:utf8'
-			}
-			else {
-			$mode = '>:utf8';
-			# The idea is that on the "new" records to be able to have lists.
-			# If we do not do it the file will always overwritten and we will have only one value
-			# delete all the old id files and create the current
-			opendir DIR, $dir or Exit(15, "Could not read directory $dir because $!");
-				while ($_ = readdir DIR) {
-				next if -d "$dir/$_";
-				next if $_ eq $id;
-				unlink "$dir/$_"
-				}
-			closedir DIR;
-			open  FILE, '>', "$dir/$id" or Exit(15, "Could not create file $dir/$id because $!");
-			close FILE
-			}
-		}
-
-	open  FILE, $mode, "$dir/___" or Exit(16, "Could not create file $dir/___ because $!");
-	print FILE "$data\n";
-	close FILE
-	}
-}
+my $mode	= $append ? '>>:utf8' : '>:utf8';
+my $dir;
+my $file;
+my %AllowList;
+@{$output}{'keys','values'}=(0,0);
 
 
-
-sub Create_nested_directory {
+sub CreateDir {
 my @Mkdir = split /\/+/, $_[0];
 return $_[0] unless @Mkdir;
 splice(@Mkdir, 0, 2, "/$Mkdir[1]") if (($Mkdir[0] eq '') && (scalar @Mkdir > 0));
@@ -81,3 +36,40 @@ for ($i=$#Mkdir;$i>=0;$i--)		{ last if -d join '/', @Mkdir[0..$i] }
 for (my $j=$i+1;$j<@Mkdir;$j++)	{ mkdir join('/', @Mkdir[0 .. $j]) or return undef }
 $_[0]
 }
+
+
+sub Walker {
+my $data=shift;
+if		(ref $data eq 'SCALAR')	{ Walker(${$data}, @_) }
+elsif	(ref $data eq 'ARRAY')	{ Walker($_, @_)				for @$data }
+elsif	(ref $data eq 'HASH')	{ Walker($data->{$_}, @_, $_)	for keys %$data }
+
+	else {
+	$data // return;
+	$file= @_ ? pop @_ : 'default';
+	$dir = join '/', "$datadir/$input->{db}/data", @_;
+	$data=~s/\s*$//;
+	unless (-d $dir) {CreateDir $dir or Exit(14, "Could not create dir $dir because $!"); $output->{keys}++ }
+
+		unless ($append) {
+
+			if (exists $AllowList{"$dir/$file"}) {
+			$mode = '>>:utf8'
+			}
+			else {
+			$mode = '>:utf8';
+			$AllowList{"$dir/$file"}=undef;
+			$output->{keys}++
+			}
+		}
+
+	open  FILE, $mode, "$dir/$file" or Exit(16, "Could not create file $dir/$file because $!");
+	print FILE "$data\n";
+	close FILE;
+	$output->{values}++
+	}
+}
+
+
+Walker $input->{data};
+Exit

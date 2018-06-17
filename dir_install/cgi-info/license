@@ -23,5 +23,4 @@ $/ = undef;
 open FILE, '<', "$FindBin::Bin/../LICENSE" or Exit(30, "Could not read LICENSE");
 $output->{license} = <FILE>;
 close FILE;
-
-&Exit
+Exit

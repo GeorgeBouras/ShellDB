@@ -11,59 +11,28 @@
 "key"    : "/",
 "filter" : [ 
                { 
-               "level"      : "1",
-               "applied_on" : "keys",
-               "condition"  : "(? eq 'k1') or (? eq 'k2')"
+               "level"     : "1",
+               "type"      : "keys",
+               "condition" : "(? eq 'k1') or (? eq 'k2')"			
                }
            ]
 
 }
 
 
-{
-"db"        : "DB1",
-"key"       : "/",
-"max_level" : 5,
-"filter"    : [ 
-
-    {
-    "level"      : "1",
-    "applied_on" : "keys",
-    "condition"  : "(? == '2012') or (? > '2014')"
-    },
-    
-    {
-    "level"      : "2",
-    "applied_on" : "keys",
-    "condition"  : "(? > '08')"
-    },
-
-    {
-    "level"      : "3",
-    "applied_on" : "keys",
-    "condition"  : "(? >= '12')"
-    },
-
-    {
-    "level"      : "3",
-    "applied_on" : "values",
-    "condition"  : "(? =~ /^k/ )"
-    }
-
-  ]
-}
-
-
-
 
 {
-"db"        : "DB1",
-"key"       : "/",
-"max_level" : 5,
-"filter"    : [
-  { "level":"1", "applied_on":"keys",  "condition":"(? == '2017')"   },
-  { "level":"2", "applied_on":"keys",  "condition":"(? == '12')"     },
-  { "level":"3", "applied_on":"keys",  "condition":"(? == '31')"     }, 
-  { "level":"3", "applied_on":"values","condition":"(? =~ /k(1|2)/)" } 
-  ]
+"db"               : "DB1",
+"key"              : "/",
+"max_level"        : "5",
+"allow_empty_keys" : false,
+"filter"           : [
+
+	{"level": "1", "type": "key",   "condition": "(? == '2012') or (? > '2014')"},
+	{"level": "2", "type": "key",   "condition": "(? > '08')" },
+	{"level": "3", "type": "key",   "condition": "(? >= '12')"},
+	{"level": "3", "type": "value", "condition": "(? eq 'k1' )" },
+	{"level": "3", "type": "value", "condition": "(? eq 'k3' )" },
+	{"level": "3", "type": "value", "condition": "(? =~ /^ID/ )" }
+	]
 }

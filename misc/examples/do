@@ -9,10 +9,20 @@ export REQUEST_METHOD=POST
 export QUERY_STRING="pretty=true&canonical=false"
 
 #  --==  info  ==--
+## network
+#curl http://localhost:7000/info/about
+#curl http://localhost:7000/info/license
+#curl http://localhost:7000/info/enviroment?canonical=true
 
-#curl http://localhost:7000/info/about							echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/about
-#curl http://localhost:7000/info/license						echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/license
-#curl http://localhost:7000/info/enviroment?canonical=true		echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/enviroment
+## local process
+#echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/about
+#echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/license
+#echo '{}' | /usr/bin/perl /opt/shelldb/cgi-info/enviroment
+
+
+
+
+
 
 #  --==  db . At db key you can use the wildcards * ?  ==--
 
@@ -27,15 +37,17 @@ export QUERY_STRING="pretty=true&canonical=false"
 #curl -X POST -H "Content-Type: application/json" --data '{"db" : "db*"}'    http://localhost:7000/db/list
 #curl -X POST -H "Content-Type: application/json" --data '{"db" : "db*"}' -s http://localhost:7000/db/list | jq '.database|.[]|{name,status}'
 
+#echo '{}'             | /usr/bin/perl /opt/shelldb/cgi-db/list | jq '.database|.[]|{name,status}'
+#echo '{"db": "DB?" }' | /usr/bin/perl /opt/shelldb/cgi-db/list
+#echo '{"db": "DB*" }' | /usr/bin/perl /opt/shelldb/cgi-db/list | jq '.database|.[]|{name,status}'
+#echo '{"db": "DB*" }' | /usr/bin/perl /opt/shelldb/cgi-db/list | jq '.database|.[].name'
 
-#echo '{"db": "DB?" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/list
-#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/list | jq '.database|.[]|{name,status}'
-#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/list | jq '.database|.[].name'
-#echo '{"db": "DB3" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/create
-#echo '{"db": "DB2" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/drop
-#echo '{"db": "D??" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/open
-#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/close
-#echo '{"db": "DB*" }'                  | /usr/bin/perl /opt/shelldb/cgi-db/vacuum
+#echo '{"db": "DB3" }' | /usr/bin/perl /opt/shelldb/cgi-db/create
+#echo '{"db": "DB2" }' | /usr/bin/perl /opt/shelldb/cgi-db/drop
+#echo '{"db": "D??" }' | /usr/bin/perl /opt/shelldb/cgi-db/open
+#echo '{"db": "DB*" }' | /usr/bin/perl /opt/shelldb/cgi-db/close
+#echo '{"db": "DB*" }' | /usr/bin/perl /opt/shelldb/cgi-db/vacuum
+
 #echo '{"db":"DB1","size":"249715200"}' | /usr/bin/perl /opt/shelldb/cgi-db/expand
 
 
@@ -45,6 +57,7 @@ export QUERY_STRING="pretty=true&canonical=false"
 #jq -c . json.query  | /usr/bin/perl /opt/shelldb/cgi-sql/query
 #jq -c . json.exist  | /usr/bin/perl /opt/shelldb/cgi-sql/exist
 #jq -c . json.rename | /usr/bin/perl /opt/shelldb/cgi-sql/rename
+#echo '{"db":"DB1","data":{ "k1" : "v2" }}'         | /usr/bin/perl /opt/shelldb/cgi-sql/insert
 #echo '{"db":"DB1","key":"joe"}'                    | /usr/bin/perl /opt/shelldb/cgi-sql/exist
 #echo '{"db":"DB1","key":"joe","check_data":false}' | /usr/bin/perl /opt/shelldb/cgi-sql/delete
 

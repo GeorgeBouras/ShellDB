@@ -40,6 +40,12 @@ Upgrade, do not affect your data
 	./install -–remove
 	./install --install
 
+
+Sometimes it is useful to quick filter the results using the jq utility; so optional you can install it using the commands
+
+	curl -L https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 -o /usr/bin/jq
+	chmod a+rx /usr/bin/jq
+
 To stop, start the embedded web server and mount your databases
 
 	systemctl (start|stop|status) shelldb

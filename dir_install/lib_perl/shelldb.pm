@@ -1,12 +1,10 @@
 # Functions for the ShellDB
-# George Bouras
-# george.mpouras@yandex.com
-# Athens, Greece
+# George Bouras , george.mpouras@yandex.com , Athens/Greece
 
 package shelldb;
 use		JSON;
 require Exporter;
-our	$VERSION = '1.2.2';
+our	$VERSION = '2.0.0';
 our	@ISA	 = qw/Exporter/;
 our	@EXPORT	 = qw/$datadir $input $output &Exit/;
 our $datadir = '/var/lib/shelldb';
@@ -41,4 +39,4 @@ print $json->encode($output);
 CORE::exit($output->{error_code})
 }
 
-1# END OF MODULE
+1

@@ -1,7 +1,6 @@
 #!/usr/bin/perl
-# close a database
-# The database is not deleted.
-# You can open it if you want to re use it
+# close a database (not deleted)
+# You can open it again
 #
 # George Bouras
 # george.mpouras@yandex.com
@@ -43,4 +42,4 @@ push @{$output->{database}}, $db
 }
 closedir DIR;
 $output->{'error_message'}='No matching database' unless $found;
-&Exit
+Exit

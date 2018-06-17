@@ -4,28 +4,24 @@
 # George Bouras
 # george.mpouras@yandex.com
 
-
 use strict;
 use warnings;
 use lib '/opt/shelldb/lib_perl';
 use shelldb;
 
-use feature qw/say/;
-
-
 exists $input->{$_} || Exit(5, "key '$_' is missing from your input") foreach qw/db key/;
-$input->{key}				=~s/^\/*(.*?)\/*$/$1/;
-$input->{max_level}			//= 2000;
-$input->{allow_empty_keys}	= exists $input->{allow_empty_keys}	? $input->{allow_empty_keys}=~/^(t|1)/i ?1:0:0;
-$output->{data}				= {};
-Exit(6, "The database $input->{db} does not exist")	unless -d "$datadir/$input->{db}/data";
-Exit(7, 'key does not exist')						unless -d "$datadir/$input->{db}/data/$input->{key}";
-Exit(8, 'max_level should be an integer')			unless $input->{max_level} =~/^\d+$/;
-
+$input->{key}		=~s/^\/*(.*?)\/*$/$1/;
+$input->{max_level}	//= 2000;
+-d "$datadir/$input->{db}/data"					|| Exit 6,"The database $input->{db} does not exist";
+-d "$datadir/$input->{db}/data/$input->{key}"	|| Exit 7,'key does not exist';
+$input->{max_level}	=~/^\d+$/					|| Exit 8, 'max_level should be an integer';
+$output->{data}		= {};
+$input->{allow_empty_keys} = exists $input->{allow_empty_keys}	? $input->{allow_empty_keys}=~/^(t|1)/i ?1:0:0;
 
 my $filter	= {key=>{}, val=>{}};
 my $level	= 0;
 my @data;
+my @path;
 my $key;
 my $type;
 my $rec;
@@ -37,37 +33,36 @@ $input->{filter} = [ $input->{filter} ] if 'HASH' eq ref $input->{filter};
 Exit(9, 'filter key is not a json of closures or just a single closure') unless 'ARRAY' eq ref $input->{filter};
 my $i=1;
 
-	my $parsefilter = sub { #use Data::Dumper; print Dumper $_[0]; exit;
+	my $parsefilter = sub { # use Data::Dumper; print Dumper $_[0]; exit;
 	(my $code = $_[0]->{condition}) =~s/\?/\$_[0]/gm;
 	$code = eval "sub{$code?1:0}";
 	Exit(13, "Could not understand the $type filter $i condition $_[0]->{condition} , possible syntax error") if $@;
 	my $F;
 
-		if (exists $_[0]->{condition_at_fields}) {
+		if (exists $_[0]->{on_keys}) {
 
-			if ('ARRAY' eq ref $_[0]->{condition_at_fields}) {
-			$F->{$_} = undef for @{$_[0]->{condition_at_fields}}
+			if ('ARRAY' eq ref $_[0]->{on_keys}) {
+			$F->{$_} = undef for @{$_[0]->{on_keys}}
 			}
 			else {
-			$F->{ $_[0]->{condition_at_fields} } = undef
+			$F->{ $_[0]->{on_keys} } = undef
 			}
 		}
-		else {
-		$F = 'all'
-		}
 
-	{condition_at_fields=>$F, code=>$code}
+	$F //= 'all';
+
+	{on_keys=>$F, code=>$code}
 	};
-	
+
 	foreach my $f (@{$input->{filter}}) {
-	exists $f->{$_} || Exit(10,"filter $i is missing the key $_") foreach qw/type condition/;
-	$type = $f->{type}=~/(?i)^k/ ? 'key' : $f->{type}=~/(?i)^v/ ? 'val' : Exit(12, "filter $i type $f->{type} should be keys or values");
+	exists $f->{$_} || Exit 10,"filter $i is missing the key $_" foreach qw/type condition/;
+	$type = $f->{type}=~/(?i)^k/ ? 'key' : $f->{type}=~/(?i)^v/ ? 'val' : Exit 12,"filter $i type $f->{type} should be keys or values";
 
 		if (exists $f->{level}) {
 		$f->{level} = [ $f->{level} ] unless 'ARRAY' eq ref $f->{level};
 
 			foreach my $level (@{$f->{level}}) {
-			Exit(12,"filter $i level $level should be an interger") if $level !~/^\d+$/;			
+			Exit 12,"filter $i level $level should be an interger" if $level !~/^\d+$/;			
 			push @{$filter->{$type}->{$level}}, $parsefilter->($f)
 			}
 		}
@@ -81,26 +76,14 @@ my $i=1;
 
 
 
-foreach (qw/key val/) {
-	unless ( %{$filter->{$_}} ) {
-	delete $filter->{$_}
-	}
-}
-
+foreach ('key','val') { delete $filter->{$_} unless %{$filter->{$_}} }
 delete $input->{filter};
 
-
-	
-
-
-
-
 #use Data::Dumper; print Dumper $filter; exit;
-#use Data::Dumper; print Dumper $input; exit;
 
 chdir "$datadir/$input->{db}/data/$input->{key}";
 recursive_dir('.');
-&Exit;
+Exit;
 
 
 
@@ -113,7 +96,7 @@ recursive_dir('.');
 
 
 
-sub Filter_key
+sub Filter
 {
 	if (exists $filter->{key}->{$level}) {
 
@@ -144,44 +127,31 @@ sub recursive_dir
 {
 opendir my $dh, $_[0] or Exit(20,"Could not read directory $_[0] the error is $!");
 
-
 	foreach $key (grep ! /^\.+$/, readdir $dh)
 	{
-	my $fullpath="$_[0]/$key";
+	my $fullpath= "$_[0]/$key";
+	@path		= split /\//,$fullpath; shift @path;
+	$level		= scalar @path;
+	next unless Filter $key;
+	#print "$level $fullpath\n";
 
 		# dir
-	 	if (-d $fullpath) {
-		$level++;
-
-			if ( Filter_key($key) ) {
-			#print "type=key, level=$level, key=$key, fullpath=$fullpath, Filter=",Filter_key($key),"\n";
-
-				if ($input->{allow_empty_keys}) {
-				my @path = split /\//, $fullpath; shift @path;
-				HashKeySet($output->{data}, [@path])
-				}
-
-			recursive_dir($fullpath) if $input->{max_level} > $level
-			}
-
-		$level--
+	 	if (-d $fullpath) {		
+		HashKeySet($output->{data}, [@path]) if $input->{allow_empty_keys};
+		recursive_dir($fullpath) if $input->{max_level} > $level
 		}
+
 
 		# file
 		else {
-		next if $key ne '___';
-		my @path = split /\//, $_[0]; shift @path;
-		$key=$path[-1];
-		@data=();
+		@data=();		
 
 			if (exists $filter->{val}) {
 			
 				if (exists $filter->{val}->{$level}) {
 					foreach (@{$filter->{val}->{$level}}) {
-	
-						if ( ($_->{condition_at_fields} eq 'all') || (exists $_->{condition_at_fields}->{$key}) ) {
-						#print "type=val, level=$level, key=$key, fullpath=$fullpath\n";
-						open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+						if ( ($_->{on_keys} eq 'all') || (exists $_->{on_keys}->{$key}) ) {
+						open FILE, '<:utf8', $fullpath or Exit 21,"Could not read file $fullpath because $!";
 							while($rec=<FILE>) {
 							next if $rec=~/^\s*$/;
 							$rec=~s/^\s*(.*?)\s*$/$1/;
@@ -194,10 +164,8 @@ opendir my $dh, $_[0] or Exit(20,"Could not read directory $_[0] the error is $!
 
 				if (exists $filter->{val}->{all}) {
 					foreach (@{$filter->{val}->{all}}) {
-
-						if ( ($_->{condition_at_fields} eq 'all') || (exists $_->{condition_at_fields}->{$key}) ) {
-						#print "type=val, level=$level, key=$key, fullpath=$fullpath\n";
-						open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+						if ( ($_->{on_keys} eq 'all') || (exists $_->{on_keys}->{$key}) ) {
+						open FILE, '<:utf8', $fullpath or Exit 22,"Could not read file $fullpath because $!";
 							while($rec=<FILE>) {
 							next if $rec=~/^\s*$/;
 							$rec=~s/^\s*(.*?)\s*$/$1/;
@@ -209,7 +177,7 @@ opendir my $dh, $_[0] or Exit(20,"Could not read directory $_[0] the error is $!
 				}
 			}
 			else {
-			open FILE, '<:utf8', $fullpath or Exit(21,"Could not read file $fullpath , error $!");
+			open FILE, '<:utf8', $fullpath or Exit 23,"Could not read file $fullpath because $!";
 			while($rec=<FILE>) { next if $rec=~/^\s*$/; $rec=~s/^\s*(.*?)\s*$/$1/; push @data, $rec }
 			close FILE			
 			}
@@ -218,9 +186,7 @@ opendir my $dh, $_[0] or Exit(20,"Could not read directory $_[0] the error is $!
 			if (@data) {
 
 				if (@data > 1) {
-				HashKeySet($output->{data}, [@path], [@data] )
-				}
-				else {
+				HashKeySet($output->{data}, [@path], [@data] ) } else {
 				HashKeySet($output->{data}, [@path], $data[0] )
 				}
 

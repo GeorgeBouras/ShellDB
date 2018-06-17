@@ -11,7 +11,7 @@ package	dbadmin;
 use		strict;
 use		warnings;
 require Exporter;
-our	$VERSION= '2.0.2';
+our	$VERSION= '1.0.1';
 
 my $user	= 'shelldb';
 my $group	= 'shelldb';

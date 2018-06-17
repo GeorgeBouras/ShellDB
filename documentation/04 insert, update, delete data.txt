@@ -7,15 +7,19 @@ The following methods are available
 	rename : Rename a key
 
 
-insert , Insert or update data
-------------------------------
+insert or update data
+---------------------
 
 	POST db/insert
 	Inserted data can be : Values, Lists, Hashes (Associative arrays)
 	append key can be true or false (default)
-	When append is true  data are appended to  the existing
 	When append is false data are over writing the existing (default)
-	Example of posted data to insert
+	When append is true  data are appended as a list of values
+	Quick example
+
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1", "data":{"joe":"foo"}}' localhost:7000/insert
+	
+	Bulk insert multiple records
 
 	{
 	"db"     : "DB1",
@@ -51,8 +55,8 @@ insert , Insert or update data
 	  }
 	}
 
-	We can have faster queries, actually faster than other
-	commercial products than storing the same data as
+	
+	This pruducem much faster queries, than storing the same data as
 
 	{
 	"db"     : "DB1",
@@ -61,14 +65,12 @@ insert , Insert or update data
 	  "192.168.0.34" : { "host":"srv34", "status":"up" }
 	  }
 	}
-
-	examples:
+	
 	curl -XPOST -H"Content-Type: application/json" -d @data.json localhost:7000/insert
-	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1", "mode":"append", "data":{"joe":"foo"}}' localhost:7000/insert
 
 
-delete , Delete selected keys
------------------------------
+delete keys
+-----------
 
 	POST db/delete
 	Delete deep keys from the stored data structurss
@@ -81,19 +83,34 @@ delete , Delete selected keys
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"2012/07","check_data":false}' localhost:7000/delete
 
 
-exist , Check if a key exists
------------------------------
+exist key
+---------
 
 	POST db/exist
-	The key can be nested on a deep level
+	Check if a key exists. The key can be nested on a deep level e.g.
 
-	examples:
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"192"}'     localhost:7000/exist
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","key":"192/168"}' localhost:7000/exist
 
+	If the key is missing "exist" is 0 other else is 1
+	If the key contain values "holdvalues" is 1 other else is 0 e.g.
 
-rename , Rename a key
----------------------
+	{
+	"exist"         : 1,
+	"holdvalues"    : 0,
+	"error_message" : "success",
+	"error_code"    : 0
+	}
+
+	{
+	"exist"         : 0,
+	"holdvalues"    : 0,
+	"error_message" : "success",
+	"error_code"    : 0
+	}
+
+rename key
+----------
 
 	POST db/rename
 	The key can be nested on a deep level

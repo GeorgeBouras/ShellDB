@@ -40,41 +40,38 @@ foreach ('', 'tmp', 'storage', 'metadata') { mkdir "$datadir/$input->{db}/$_" or
 
 @{$input->{metadata}}{qw/CreationTime last_expansion/} = ($^T, {size=>$input->{size}, time=>$^T});
 
-Walker( $input->{metadata} );
 
-
-
-# The Datafile_create returs : ERROR, DEVICENAME
-@{$output}{qw/error_code error_message/} = dbadmin::Datafile_create("$datadir/$input->{db}", $input->{size}); &Exit if $output->{error_code};
-@{$output}{qw/error_code error_message/} = dbadmin::Create_volume(  "$datadir/$input->{db}", $output->{error_message});
-&Exit;
-
-
-
+sub CreateDir {
+my @Mkdir = split /\/+/, $_[0];
+return $_[0] unless @Mkdir;
+splice(@Mkdir, 0, 2, "/$Mkdir[1]") if (($Mkdir[0] eq '') && (scalar @Mkdir > 0));
+my $i;
+for ($i=$#Mkdir;$i>=0;$i--)		{ last if -d join '/', @Mkdir[0..$i] }
+for (my $j=$i+1;$j<@Mkdir;$j++)	{ mkdir join('/', @Mkdir[0 .. $j]) or return undef }
+$_[0]
+}
 
 sub Walker {
 my $data=shift;
-if    ('SCALAR' eq ref $data) { Walker(${$data},    @_)                          }
-elsif ('ARRAY'  eq ref $data) { Walker($_,          @_)     for @{$data}         }
-elsif ('HASH'   eq ref $data) {	Walker($data->{$_}, @_, $_) for sort keys %$data }
-else  {
+if		(ref $data eq 'SCALAR')	{ Walker(${$data}, @_) }
+elsif	(ref $data eq 'ARRAY')	{ Walker($_, @_)				for @$data }
+elsif	(ref $data eq 'HASH')	{ Walker($data->{$_}, @_, $_)	for keys %$data } 
 
-	$data=~s/\s*$//;
+	else {
+	my $file= pop @_;
 	my $dir = join '/', "$datadir/$input->{db}/metadata", @_;
-	Create_nested_directory($dir) or Exit(10, "Could not create dir $dir because $!");
-	open  FILE, '>:utf8', "$dir/___" or Exit(11, "Could not create file $dir/___");
+	$data=~s/\s*$//;
+	CreateDir $dir or Exit(10, "Could not create dir $dir because $!");
+	open  FILE, '>:utf8', "$dir/$file" or Exit(11, "Could not create file $dir/$file because $!");
 	print FILE "$data\n";
 	close FILE
 	}
 }
 
 
-sub Create_nested_directory {
-my @Mkdir = split /\/+/, $_[0];
-return $_[0] unless @Mkdir;
-splice(@Mkdir, 0, 2, "/$Mkdir[1]") if (($Mkdir[0] eq '') && (scalar @Mkdir > 0));
-my $i;
-for ($i=$#Mkdir; $i>=0; $i--)     { last if -d join '/', @Mkdir[0..$i] }
-for (my $j=$i+1; $j<@Mkdir; $j++) { mkdir join('/', @Mkdir[0 .. $j]) or return undef }
-$_[0]
-}
+Walker $input->{metadata};
+
+# The Datafile_create returns : ERROR, DEVICENAME
+@{$output}{qw/error_code error_message/} = dbadmin::Datafile_create("$datadir/$input->{db}", $input->{size}); &Exit if $output->{error_code};
+@{$output}{qw/error_code error_message/} = dbadmin::Create_volume(  "$datadir/$input->{db}", $output->{error_message});
+Exit

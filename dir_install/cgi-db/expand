@@ -33,8 +33,8 @@ Exit(246, "Database $input->{db} subvolume __SNAPSHOTS is not mounted as snapsho
 
 unless (exists $input->{size}) {
 
-	if (-f "$datadir/$input->{db}/metadata/last_expansion/size/___") {
-	open FILE, '<', "$datadir/$input->{db}/metadata/last_expansion/size/___" or Exit(247, "Could read Database $input->{db} medata size because $!");
+	if (-f "$datadir/$input->{db}/metadata/last_expansion/size") {
+	open FILE, '<', "$datadir/$input->{db}/metadata/last_expansion/size" or Exit(247, "Could read Database $input->{db} medata size because $!");
 	$input->{size} = readline FILE;
 	close FILE;
 	chomp $input->{size}
@@ -50,7 +50,7 @@ Exit(249, "Database $input->{db} expand size must be 100Mb or bigger")	if $input
 ($error, $loopdev) = dbadmin::Datafile_create("$datadir/$input->{db}", $input->{size});	Exit($error, $loopdev) if $error;
 ($error, $message) = dbadmin::Add_new_device( "$datadir/$input->{db}", $loopdev);		Exit($error, $message) if $error;
 
-open  FILE, '>', "$datadir/$input->{db}/metadata/last_expansion/size/___";
+open  FILE, '>', "$datadir/$input->{db}/metadata/last_expansion/size";
 print FILE "$input->{size}\n";
 close FILE;
 

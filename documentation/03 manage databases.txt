@@ -17,12 +17,12 @@ create , Create a new database
 	At the posted JSON data we can spefify the initial size, and arbitary metadata
 
 	{
-	"db"      : "DB1",
+	"db"      : "LinuxWiki",
 	"size"    : "209715200",
 	"metadata":
      
 		{
-		"description": "Test IO perfomance",
+		"description": "Linux documents and how tos",
 		"Location":    "Greece/Athens",
 		"Owner":
 			{
@@ -33,19 +33,19 @@ create , Create a new database
 	}
 
 	examples:
+
 	curl -XPOST -H"Content-Type: application/json" -d '{"db" : "DB1"}' localhost:7000/db/create
 	curl -XPOST -H"Content-Type: application/json" -d  @data.json      localhost:7000/db/create
 
 
-list , List one or more databases
----------------------------------
+list databases
+--------------
 
 	POST db/list
 	You can use the * ? wildcards characters to narrow wide your search
 	It is case insensitive
-	Optional you can use the jq for post edit the results
-	
-	examples:
+	Optional you can use the jq for post edit the results e.g. 	
+
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"db*"}' localhost:7000/db/list
 
 	curl    http://localhost:7000/db/list
@@ -65,8 +65,8 @@ drop , Deletes one or more databases
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"*"}'   localhost:7000/db/drop
 
 
-vacuum , Delete all DB data
----------------------------
+vacuum , Delete all DB data without delete the databases
+--------------------------------------------------------
 
 	POST db/drop
 	Empty databases from data

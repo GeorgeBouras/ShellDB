@@ -16,4 +16,4 @@ use FindBin;
 use lib "$FindBin::Bin/../lib_perl";
 use shelldb;
 while (my ($k,$v) = each %ENV) {$output->{$k}=$v }
-&Exit
+Exit

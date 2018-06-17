@@ -10,14 +10,11 @@ use lib '/opt/shelldb/lib_perl';
 use shelldb;
 
 exists $input->{$_} || Exit(2, "key \"$_\" is missing from your input") foreach qw/db key/;
-Exit(37, "The database $input->{db} does not exist") unless -d "$datadir/$input->{db}/data";
-
+-d "$datadir/$input->{db}/data" || Exit 37,"The database $input->{db} does not exist";
 $input->{key} =~s/^\/*(.*?)\/*$/$1/;
 
-if (-d "$datadir/$input->{db}/data/$input->{key}") {
-$output->{data}	= -f "$datadir/$input->{db}/data/$input->{key}/___" ? 'contain value' : 'does not contain value';
-Exit(0,'exist')
-}
-else {
-Exit(0,'missing')
-}
+if		(-d "$datadir/$input->{db}/data/$input->{key}") { @{$output}{'exist','holdvalues'}=(1,0) }
+elsif	(-f "$datadir/$input->{db}/data/$input->{key}") { @{$output}{'exist','holdvalues'}=(1,1) }
+else	{ @{$output}{'exist','holdvalues'}=(0,0)	}
+
+Exit

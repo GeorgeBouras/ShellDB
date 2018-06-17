@@ -32,20 +32,30 @@ Optional query keys
 Mandatory filter keys
 
   type
-    "key" or "value" it is which type of recored to apply the condition
+    "key" or "value"  at which type of record to apply the condition
   condition
-    your psedo code condition. ? is the current value
+    pseudo code condition  ? is the current value
 
 Optional filter keys
 
   level
-    On which leveles to apply the condition. All if missing
-    It can be a single or a list of integers
-  condition_at_fields
+    On which levels to apply the condition. All if missing
+    It can be an integer or a list of integers
+  on_keys
     On which fields to apply the condition. All if missing
     It can be a single or a list
     When "type":"key" it have no effect. It is only for values
     
+example
+
+    {
+    "db"               : "DB1",
+    "key"              : "/",
+    "max_level"        : "5",
+    "allow_empty_keys" : false,
+    "filter"           : { "level":"2", "type":"value", "on_keys":["album","title"], "condition": "? =~/king/i" }
+    }
+
 
 example
 
@@ -53,7 +63,6 @@ example
     "db"               : "MyDB",
     "key"              : "/",
     "max_level"        : 3,
-    "select"           : ["col1", "col2"],
     "allow_empty_keys" : false,
     "filter"           : [
 
@@ -77,7 +86,7 @@ example
 		{
         "level":"2",
         "type":"value",
-        "condition_at_fields":["album", "id"],
+        "on_keys":["album", "id"],
         "condition":"? =~ /George/i"
         }
       ]
@@ -85,12 +94,12 @@ example
 
 
 
-If your to include extra fields at your results e.g. field3, field4 
+If want to include extra fields at your results e.g. field3, field4 
 except the ones that already defined at 
-    "condition_at_fields" : ["field1", "field"],
+    "on_keys" : ["field1", "field"],
 you can include filters like the following
 
-    {  "type":"value" , "condition_at_fields":["field3","field4"],  "condition":"1" }
+    { "type":"value" , "on_keys":["field3","field4"] , "condition":"1" }
 
 
 
@@ -181,7 +190,7 @@ we can have the queries
 	             "level"     : "1",
 	             "type"      : "value",
 	             "condition" : "(? eq 'http') or (? =~/^f/i )",,
-                 "condition_at_fields" : "role"
+                 "on_keys" : "role"
 	             }
 	           ]
 	}

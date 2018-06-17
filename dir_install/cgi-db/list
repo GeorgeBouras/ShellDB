@@ -52,8 +52,8 @@ recursive_dir('.')
 }
 
 closedir DIR;
-Exit(1,"No matching database") unless %{$output->{database}};
-&Exit;
+Exit(0,"No matching database") unless %{$output->{database}};
+Exit;
 
 
 
@@ -67,28 +67,23 @@ Exit(1,"No matching database") unless %{$output->{database}};
 
 sub recursive_dir
 {
-opendir my $dh, $_[0] or Exit(60,"Could not read directory : $_[0] , error : $!");
+opendir my $dh, $_[0] or Exit(60,"Could not read directory $_[0] because $!");
 
-	foreach my $key (grep ! /^\.+$/, readdir $dh)
-	{
-	my $fullpath = "$_[0]/$key";
+	foreach my $key (grep ! /^\.+$/, readdir $dh) {
+	my $fullpath= "$_[0]/$key";
+	my @path	= split /\//, $fullpath; shift @path;
 
-	 	if (-d $fullpath)
-		{
-		my @path = split /\//, $fullpath; shift @path;		
-		HashKeySet($output->{database}->{$db}, [@path]);
+	 	if (-d $fullpath) {
 		recursive_dir($fullpath)
 		}
-		else
-		{		
-		my @path = split /\//, $_[0]; shift @path;
+		else {
 		my @data;
-		open FILE, '<:utf8', $fullpath or Exit(61,"Could not read file $fullpath , error $!");
+		open FILE, '<:utf8', $fullpath or Exit(61,"Could not read file $fullpath because $!");
 
 			while($record=<FILE>) {
 			next if $record=~/^\s*$/;
 			$record=~s/^\s*(.*?)\s*$/$1/;
-			push(@data, $record)
+			push @data, $record
 			}
 
 		close FILE;

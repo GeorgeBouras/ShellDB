@@ -3,4 +3,8 @@
 
 # tar cvJf /tmp/ShellDB.$(date +%F).tar.xz -C /opt `ls --format single-column ../.. | grep -i ShellDB-`
 
+
+
+if [ -f /tmp/ShellDB.$(date +%F).tar.xz ]; then rm -f /tmp/ShellDB.$(date +%F).tar.xz; fi
+
 tar cvJf /tmp/ShellDB.$(date +%F).tar.xz -C ../.. ShellDB

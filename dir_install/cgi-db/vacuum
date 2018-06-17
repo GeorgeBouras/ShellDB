@@ -46,8 +46,8 @@ opendir DBDIR, "$datadir/$db/data" or Exit(42, "Could not read database $db data
 		unlink $node or Exit(43, "Could not delete database $db file $node because $!")
 		}
 		else {
-		rename $node, "$node.__vacuum__" or Exit(44, "Could not mark for vacuum $node.__vacuum__ because $!");
-		system "$find \"$node.__vacuum__\" -depth -exec $rm -rf {} \\; 1> /dev/null 2>&1"
+		rename $node, "$node.VACUUM__" or Exit(44, "Could not mark for vacuum $node.VACUUM__ because $!");
+		system "$find \"$node.VACUUM__\" -depth -exec $rm -rf {} \\; 1> /dev/null 2>&1"
 		}
 	}
 
