@@ -17,17 +17,17 @@ The insert,query,delete etc requests, are performed from very small and fast she
 
 So get the code, install it, read the short API documentation and have some fun with it.
 
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/01%20install.txt">Installation Instructions</a>
+    <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/01%20install.txt">Installation Instructions</a>
 
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/02%20generic.txt">Generic</a>
+    <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/02%20generic.txt">Generic</a>
 
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/03%20manage%20databases.txt">Manage databases</a>
+    <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/03%20manage%20databases.txt">Manage databases</a>
 
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/04%20insert%2C%20update%2C%20delete%20data.txt">Insert, Update, Delete, Rename, Check data</a>
+    <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/04%20insert%2C%20update%2C%20delete%20data.txt">Insert, Update, Delete, Rename, Check data</a>
 
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/05%20query.txt">Reporting</a>
+    <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/05%20query.txt">Reporting</a>
 
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/06%20local%20operations.txt">Local operations</a>
+    <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/06%20local%20operations.txt">Local operations</a>
 
 George Bouras
 georgios.mpouras@gmail.com
