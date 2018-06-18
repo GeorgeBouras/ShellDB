@@ -1,37 +1,42 @@
-If you have access to server's command line, you can avoid the web server
-and the http REST api by sending the json data directly to ShellDB scripts.
-Some examples are.
+If you have access to server's command line, you can be even faster, 
+bypassing the web server and the http REST api by sending the
+json data directly to ShellDB scripts.
 
+It accepts two optional arguments
+The file with the json data or the json data as string
+The properties to configure the json output
 
-set the enviroment variables
+Syntax:
 
-	export REQUEST_METHOD=POST
-	export QUERY_STRING="pretty=true&canonical=true"
-
+	perl cgi-script  [JSON_DATA_OR_FILE]  [JSON_PROPERTIES]
 
 Info
 
-	echo '{}' | perl /opt/shelldb/cgi-info/about
-	echo '{}' | perl /opt/shelldb/cgi-info/license
-	echo '{}' | perl /opt/shelldb/cgi-info/enviroment
+	perl /opt/shelldb/cgi-info/about
+	perl /opt/shelldb/cgi-info/license
 
 Database management
 
-	echo '{"db": "DB?" }'                  | perl /opt/shelldb/cgi-db/list
-	echo '{"db": "DB*" }'                  | perl /opt/shelldb/cgi-db/list | jq '.database|.[]|{name,status}'
-	echo '{"db": "DB*" }'                  | perl /opt/shelldb/cgi-db/list | jq '.database|.[].name'
-	echo '{"db": "DB3" }'                  | perl /opt/shelldb/cgi-db/create
-	echo '{"db": "DB3" }'                  | perl /opt/shelldb/cgi-db/drop
-	echo '{"db": "D??" }'                  | perl /opt/shelldb/cgi-db/open
-	echo '{"db": "DB*" }'                  | perl /opt/shelldb/cgi-db/close
-	echo '{"db": "DB*" }'                  | perl /opt/shelldb/cgi-db/vacuum
-	echo '{"db":"DB1","size":"249715200"}' | perl /opt/shelldb/cgi-db/expand
+	perl /opt/shelldb/cgi-db/list
+	perl /opt/shelldb/cgi-db/list   '{"db": "DB?"}'
+	perl /opt/shelldb/cgi-db/list   '{"db": "DB*"}' | jq '.database|.[]|{name,status}'
+	perl /opt/shelldb/cgi-db/list   '{"db": "DB*"}' | jq '.database|.[].name'
+	perl /opt/shelldb/cgi-db/create '{"db": "DB3"}' pretty=false
+	perl /opt/shelldb/cgi-db/drop   '{"db": "DB2"}' pretty=false
+	perl /opt/shelldb/cgi-db/open   '{"db": "D??"}' pretty=false
+	perl /opt/shelldb/cgi-db/close  '{"db": "DB*"}' pretty=false
+	perl /opt/shelldb/cgi-db/vacuum '{"db": "DB2"}' pretty=false
+	perl /opt/shelldb/cgi-db/expand '{"db":"DB1","size":"249715200"}'
 
-Qeuries
+Sql
 
-	jq -c . insert.json | /perl /opt/shelldb/cgi-sql/insert
-	jq -c . query.json  | /perl /opt/shelldb/cgi-sql/query
-	jq -c . exist.json  | /perl /opt/shelldb/cgi-sql/exist
-	jq -c . rename.json | /perl /opt/shelldb/cgi-sql/rename
-	echo '{"db":"DB1","key":"joe"}'                    | perl /opt/shelldb/cgi-sql/exist
-	echo '{"db":"DB1","key":"joe","check_data":false}' | perl /opt/shelldb/cgi-sql/delete
+	perl /opt/shelldb/cgi-sql/insert  insert.json
+	perl /opt/shelldb/cgi-sql/query   query.json
+	perl /opt/shelldb/cgi-sql/rename  rename.json
+
+	perl /opt/shelldb/cgi-sql/delete '{"db":"DB1","key":"joe","check_data":false}'
+
+	perl /opt/shelldb/cgi-sql/exist '{"db":"DB1","key":"joe"}'
+	perl /opt/shelldb/cgi-sql/exist '{"db":"DB1","key":"joe"}'  pretty=false
+	perl /opt/shelldb/cgi-sql/exist '{"db":"DB1","key":"joe"}' 'pretty=false;canonical=true'
+	perl /opt/shelldb/cgi-sql/exist /tmp/data.json

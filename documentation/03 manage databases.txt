@@ -58,7 +58,6 @@ drop , Deletes one or more databases
 
 	POST db/drop
 	Delete one or more databases using the * ? wildcards
-	examples:
 
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1"}' localhost:7000/db/drop
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"D??"}' localhost:7000/db/drop
@@ -69,24 +68,13 @@ vacuum , Delete all DB data without delete the databases
 --------------------------------------------------------
 
 	POST db/drop
-	Empty databases from data
-	examples:
+	Empty databases from data e.g.
 
 	curl -XPOST -H"Content-Type: application/json" -d '{"db":"db*"}' localhost:7000/db/vacuum
 
 
-expand : Expand database size while it is open
-----------------------------------------------
-
-	POST db/expand
-	Define the bytes you want to add
-
-	examples:
-	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","size":"249715200"}' localhost:7000/db/expand
-
-
-open  , Open  one or more databases
-close , Close one or more databases
+open  , one or more databases
+close , one or more databases
 -----------------------------------
 	
 	POST db/open
@@ -97,6 +85,15 @@ close , Close one or more databases
 	But there are cases that you may want to close or open a database
 	manual. You can not insert data or query a closed database.
 
-	examples:
 	curl -XPOST -H"Content-Type: application/json" -d '{"db" : "DB*"}' localhost:7000/db/open
 	curl -XPOST -H"Content-Type: application/json" -d '{"db" : "DB2"}' localhost:7000/db/close
+
+
+expand database size
+--------------------
+
+	POST db/expand
+	Database must be open in order to expand it
+	Define the size at bytes you want to add e.g.
+
+	curl -XPOST -H"Content-Type: application/json" -d '{"db":"DB1","size":"249715200"}' localhost:7000/db/expand

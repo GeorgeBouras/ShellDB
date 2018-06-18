@@ -9,8 +9,8 @@ PartOf=shelldb.service
 Type=simple
 User=shelldb
 Group=shelldb
-ExecStart=/bin/sh -c "echo '{\"db\":\"*\"}' | /usr/bin/perl /opt/shelldb/cgi-db/open"
-ExecStop=/bin/sh  -c "echo '{\"db\":\"*\"}' | /usr/bin/perl /opt/shelldb/cgi-db/close"
+ExecStart=/usr/bin/perl /opt/shelldb/cgi-db/open  '{"db":"*"}' pretty=false
+ExecStop=/usr/bin/perl  /opt/shelldb/cgi-db/close '{"db":"*"}' pretty=false
 RemainAfterExit=yes
 KillMode=mixed
 StandardOutput=journal
