@@ -40,3 +40,4 @@ Sql
 	perl /opt/shelldb/cgi-sql/exist '{"db":"DB1","key":"joe"}'  pretty=false
 	perl /opt/shelldb/cgi-sql/exist '{"db":"DB1","key":"joe"}' 'pretty=false;canonical=true'
 	perl /opt/shelldb/cgi-sql/exist /tmp/data.json
+

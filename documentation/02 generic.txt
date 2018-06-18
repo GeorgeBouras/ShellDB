@@ -12,10 +12,10 @@ Also you have to replace the localhost with your real server IP Address
 
 Optional You can alter the received JSON anwser by using the switches
 
-	... ?pretty=canonical=false       JSON keys are at random order (default)
-	... ?pretty=canonical=true        JSON keys are sorted
 	... ?pretty=true                  human readable (default)
 	... ?pretty=false                 One line serialized
+	... ?pretty=true&canonical=false  JSON keys are at random order (default)
+	... ?pretty=true&canonical=true   JSON keys are sorted
 	... ?pretty=true&canonical=true   sorting and human readable
 
 At the reply there are the keys
