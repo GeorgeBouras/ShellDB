@@ -27,7 +27,8 @@ So get the code, install it, read the short API documentation and have some fun 
 
 <a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/05%20query.txt">Reporting</a>
 
-<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/06%20local%20operations.txt">Local operations</a>
+<a href="https://github.com/GeorgeBouras/ShellDB/blob/master/documentation/06%20direct%20access.txt">Direct access</a>
+
 
 George Bouras
 georgios.mpouras@gmail.com
